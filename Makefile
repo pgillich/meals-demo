@@ -1,11 +1,17 @@
 SHELL=/bin/bash
 
+# Includes Go 1.17.6
 GOLANGCI_LINT_VERSION ?= v1.44.0
 DOCKER_BUILDER_IMAGE ?= golangci-lint:${GOLANGCI_LINT_VERSION}
 DOCKER_URL_PATH ?= golangci
+
 DOCKER_SHELLCHECK_VERSION ?= v0.8.0
 DOCKER_SHELLCHECK_IMAGE ?= shellcheck-alpine:${DOCKER_SHELLCHECK_VERSION}
 DOCKER_SHELLCHECK_PATH ?= koalaman
+
+DOCKER_MDLINT_VERSION ?= 0.3.2
+DOCKER_MDLINT_IMAGE ?= markdownlint-cli2:${DOCKER_MDLINT_VERSION}
+DOCKER_MDLINT_PATH ?= davidanson
 
 SRC_DIR ?= /build
 BUILD_SCRIPTS_DIR ?= ${SRC_DIR}/build/scripts
@@ -21,6 +27,8 @@ BUILD_VERSION ?= $(shell git describe --tags)
 BUILD_TIME = $(shell date +%FT%T%z)
 
 export DOCKER_BUILDKIT=1
+
+DEBUG_SCRIPTS ?=
 
 DOCKER_RUN_FLAGS ?= --user $$(id -u):$$(id -g) \
 	-v /etc/group:/etc/group:ro \
@@ -39,7 +47,8 @@ DOCKER_RUN_FLAGS ?= --user $$(id -u):$$(id -g) \
 	-e GO_TEST_EXCLUDES=${GO_TEST_EXCLUDES} \
 	-e TEST_COVERAGE_DIR=${TEST_COVERAGE_DIR} \
 	-e GO_LINT_CONFIG=${GO_LINT_CONFIG} \
-	-e SHELLCHECK_SOURCEPATH=${SHELLCHECK_SOURCEPATH}
+	-e SHELLCHECK_SOURCEPATH=${SHELLCHECK_SOURCEPATH} \
+	-e DEBUG_SCRIPTS=${DEBUG_SCRIPTS}
 
 DOCKERFILE_APP_DIR ?= build
 
@@ -63,5 +72,10 @@ shellcheck:
 		${BUILD_SCRIPTS_DIR}/shellcheck.sh
 .PHONY: shellcheck
 
-check: lint test shellcheck
+mdlint:
+	docker run ${DOCKER_RUN_FLAGS} -w ${SRC_DIR} ${DOCKER_MDLINT_PATH}/${DOCKER_MDLINT_IMAGE} \
+		"**/*.md" "#node_modules"
+.PHONY: mdlint
+
+check: lint test shellcheck mdlint
 .PHONY: check

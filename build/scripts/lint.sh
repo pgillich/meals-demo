@@ -1,6 +1,8 @@
 #!/bin/bash
 
-set -euxo pipefail
+[ -n "${DEBUG_SCRIPTS}" ] && set -x
+
+set -euo pipefail
 
 cd "${SRC_DIR}"
 

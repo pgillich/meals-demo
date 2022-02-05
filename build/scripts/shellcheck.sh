@@ -1,6 +1,8 @@
 #!/bin/sh
 
-set -euxo
+[ -n "${DEBUG_SCRIPTS}" ] && set -x
+
+set -euo
 
 cd "${SRC_DIR}"
 
