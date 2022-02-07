@@ -13,6 +13,21 @@ DOCKER_MDLINT_VERSION ?= 0.3.2
 DOCKER_MDLINT_IMAGE ?= markdownlint-cli2:${DOCKER_MDLINT_VERSION}
 DOCKER_MDLINT_PATH ?= davidanson
 
+DOCKER_OPENAPI_VERSION ?= v0.29.0
+DOCKER_OPENAPI_IMAGE ?= swagger:${DOCKER_OPENAPI_VERSION}
+DOCKER_OPENAPI_PATH ?= quay.io/goswagger
+
+DOCKER_OPENAPI_VERSION ?= v0.29.0
+DOCKER_OPENAPI_IMAGE ?= swagger:${DOCKER_OPENAPI_VERSION}
+DOCKER_OPENAPI_PATH ?= quay.io/goswagger
+
+API_PACKAGE_NAME ?= foodstore
+APP_NAME ?= meals-demo
+
+DOCKER_APP_VERSION ?= v0.0.4
+DOCKER_APP_IMAGE ?= ${APP_NAME}:${DOCKER_APP_VERSION}
+DOCKER_APP_PATH ?= pgillich
+
 SRC_DIR ?= /build
 BUILD_SCRIPTS_DIR ?= ${SRC_DIR}/build/scripts
 BUILD_TARGET_DIR ?= ${SRC_DIR}/build/bin
@@ -52,28 +67,69 @@ DOCKER_RUN_FLAGS ?= --user $$(id -u):$$(id -g) \
 
 DOCKERFILE_APP_DIR ?= build
 
+openapi-server:
+	docker run ${DOCKER_RUN_FLAGS} \
+		-w ${SRC_DIR} \
+		${DOCKER_OPENAPI_PATH}/${DOCKER_OPENAPI_IMAGE} \
+		generate server \
+		-f ${SRC_DIR}/api/foodstore.yaml \
+		-t internal \
+		--exclude-main
+.PHONY: openapi-server
+
+openapi-view:
+	docker run ${DOCKER_RUN_FLAGS} \
+		--network host \
+		-w ${SRC_DIR} \
+		${DOCKER_OPENAPI_PATH}/${DOCKER_OPENAPI_IMAGE} \
+		serve \
+		--port 8088 \
+		--no-open \
+		${SRC_DIR}/api/foodstore.yaml
+.PHONY: openapi-view
+
 build:
-	docker run ${DOCKER_RUN_FLAGS} ${DOCKER_URL_PATH}/${DOCKER_BUILDER_IMAGE} \
+	cp go.mod internal/buildinfo/_go.mod
+	docker run ${DOCKER_RUN_FLAGS} \
+		${DOCKER_URL_PATH}/${DOCKER_BUILDER_IMAGE} \
 		bash -c ${BUILD_SCRIPTS_DIR}/build.sh
 .PHONY: build
 
+image:
+	docker build \
+		--build-arg APP_NAME=${APP_NAME} \
+		--tag ${DOCKER_APP_PATH}/${DOCKER_APP_IMAGE} \
+		.
+.PHONY: image
+
+image-push:
+	docker image push \
+		${DOCKER_APP_PATH}/${DOCKER_APP_IMAGE}
+.PHONY: image-push
+
 test:
-	docker run ${DOCKER_RUN_FLAGS} ${DOCKER_URL_PATH}/${DOCKER_BUILDER_IMAGE} \
+	docker run ${DOCKER_RUN_FLAGS} \
+		${DOCKER_URL_PATH}/${DOCKER_BUILDER_IMAGE} \
 		bash -c ${BUILD_SCRIPTS_DIR}/test.sh
 .PHONY: test
 
 lint:
-	docker run ${DOCKER_RUN_FLAGS} ${DOCKER_URL_PATH}/${DOCKER_BUILDER_IMAGE} \
+	docker run ${DOCKER_RUN_FLAGS} \
+		${DOCKER_URL_PATH}/${DOCKER_BUILDER_IMAGE} \
 		bash -c ${BUILD_SCRIPTS_DIR}/lint.sh
 .PHONY: test
 
 shellcheck:
-	docker run ${DOCKER_RUN_FLAGS} -e SCRIPTDIR=${BUILD_SCRIPTS_DIR} ${DOCKER_SHELLCHECK_PATH}/${DOCKER_SHELLCHECK_IMAGE} \
+	docker run ${DOCKER_RUN_FLAGS} \
+		-e SCRIPTDIR=${BUILD_SCRIPTS_DIR} \
+		${DOCKER_SHELLCHECK_PATH}/${DOCKER_SHELLCHECK_IMAGE} \
 		${BUILD_SCRIPTS_DIR}/shellcheck.sh
 .PHONY: shellcheck
 
 mdlint:
-	docker run ${DOCKER_RUN_FLAGS} -w ${SRC_DIR} ${DOCKER_MDLINT_PATH}/${DOCKER_MDLINT_IMAGE} \
+	docker run ${DOCKER_RUN_FLAGS} \
+		-w ${SRC_DIR} \
+		${DOCKER_MDLINT_PATH}/${DOCKER_MDLINT_IMAGE} \
 		"**/*.md" "#node_modules"
 .PHONY: mdlint
 

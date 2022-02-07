@@ -1,6 +1,8 @@
 run:
   skip-dirs:
     - testdata
+    - internal/models
+    - internal/restapi
   tests: true
 
 linters-settings:
@@ -22,6 +24,8 @@ linters-settings:
     tab-width: 4
   funlen:
     lines: 100
+  nestif:
+    min-complexity: 10
   gocritic:
     disabled-checks:
       - paramTypeCombine
@@ -49,7 +53,14 @@ linters:
     - gofumpt
     - forbidigo
     - paralleltest
-
+    - exhaustivestruct
+    - testpackage
+    - varnamelen
+    - gci
+    - wsl
+    - ireturn
+    - stylecheck
+    - gomnd
 issues:
   exclude-use-default: false
   exclude-rules:
@@ -63,6 +74,7 @@ issues:
         - goconst
         - govet
         - funlen
+        - bodyclose
     - text: "package comment should not have leading space"
       linters:
         - golint
@@ -81,3 +93,24 @@ issues:
     - text: "exported const (.*) should have comment [(]or a comment on this block[)] or be unexported"
       linters:
         - golint
+    - text: "commentedOutCode: may want to remove commented-out code"
+      linters:
+        - gocritic
+    - text: "Comment should end in a period"
+      linters:
+        - godot
+    - text: "exitAfterDefer"
+      linters:
+        - gocritic
+    - text: "if block ends with a return statement, so drop this else and outdent its block"
+      linters:
+        - "golint"
+    - text: "Use errors.As to check for specific errors"
+      linters:
+        - errorlint
+    - text: "indent-error-flow: if block ends with a return statement, so drop this else and outdent its block"
+      linters:
+        - revive
+    - text: "error returned from external package is unwrapped"
+      linters:
+        - wrapcheck

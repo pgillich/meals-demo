@@ -17,4 +17,5 @@
 /.vscode/
 /build/bin/
 /build/coverage/
+/internal/buildinfo/_go.mod
 *.code-workspace

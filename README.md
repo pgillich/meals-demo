@@ -2,31 +2,180 @@
 
 Demo for a meals service. It's written in Go.
 
+<!-- markdownlint-disable MD013 -->
+
+## Deployment
+
+The deployment is worked out for a local Kubernetes described at <https://github.com/pgillich/kind-on-dev> with default values. Add `foodstore.kind-01.company.com` to the `/etc/hosts`, similar to `monitoring.kind-01.company.com`.
+
+### Postgres
+
+Run below command:
+
+```sh
+kubectl apply -k kubernetes/postgres
+```
+
+After a while, the postgres service can be accessed on a Load Balancer port, see:
+
+```sh
+k get svc -n postgres -o wide
+NAME       TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)          AGE   SELECTOR
+postgres   LoadBalancer   10.96.224.184   172.18.1.128   5432:31113/TCP   31m   app=postgres
+```
+
+The connection can be checked by `psql`, and the database should be created, for example:
+
+```sh
+psql -h 172.18.1.128 -U admin --password -p 5432 postgresdb
+Password:
+psql (12.9 (Ubuntu 12.9-0ubuntu0.20.04.1), server 10.1)
+Type "help" for help.
+
+postgresdb=# create database foodstore;
+```
+
+The app compiled by `make build` can also be run out of the Kubernetes cluster, for examle:
+
+```sh
+PORT=8080 SERVICE_DB_DIALECT=postgres SERVICE_DB_DSN="host=172.18.1.128 user=admin password=test123 dbname=foodstore port=5432 sslmode=disable" SERVICE_DB_SAMPLE=true SERVICE_DB_DEBUG=true ./build/bin/meals-demo
+```
+
+### Image
+
+The built image should be accessible from the cluster. The simplest way to make it accessible for Kind is loading the image, for example:
+
+```sh
+kind load docker-image --name demo pgillich/meals-demo:v0.0.3
+```
+
+### Service
+
+Review `kubernetes/foodstore/values.yaml` and run below command:
+
+```sh
+helm install --create-namespace --namespace foodstore foodstore kubernetes/foodstore
+```
+
+Above deployment is confugured for Traefik of <https://github.com/pgillich/kind-on-dev>, so the service can be accessed with `http://foodstore.kind-01.company.com`, for example:
+
+```sh
+curl http://foodstore.kind-01.company.com/v1/tags
+```
+
+## Usage
+
+The API is specified in `api/foodstore.yaml`, in OpenAPI 2.0. It can be seen in browser at <http://localhost:8088/docs>, after running below command:
+
+```sh
+make openapi-view
+```
+
+### Examples, getting info
+
+The `/v1/livez` endpoint is used by Kubernetes.
+
+The `/v1/version` returns build information, for example:
+
+```sh
+curl 127.0.0.1:8080/v1/version
+{"appName":"meals-demo","buildTime":"2022-02-06T14:19:15+0100","goMod":"module github.com/pgillich/meals-demo\n\ngo 1.17\n\nrequire (\n\tgithub.com/go-openapi/errors v0.20.1\n\tgithub.com/go-openapi/loads v0.21.1\n\tgithub.com/go-openapi/runtime v0.23.0\n\tgithub.com/go-openapi/spec v0.20.4\n\tgithub.com/go-openapi/strfmt v0.21.0\n\tgithub.com/go-openapi/swag v0.19.15\n\tgithub.com/go-openapi/validate v0.20.3\n\tgithub.com/jessevdk/go-flags v1.5.0\n\tgithub.com/stretchr/testify v1.7.0\n\tgolang.org/x/net v0.0.0-20210421230115-4e50805a0758\n)\n\nrequire (\n\temperror.dev/errors v0.8.0 // indirect\n\tgithub.com/PuerkitoBio/purell v1.1.1 // indirect\n\tgithub.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect\n\tgithub.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef // indirect\n\tgithub.com/davecgh/go-spew v1.1.1 // indirect\n\tgithub.com/docker/go-units v0.4.0 // indirect\n\tgithub.com/go-openapi/analysis v0.21.2 // indirect\n\tgithub.com/go-openapi/jsonpointer v0.19.5 // indirect\n\tgithub.com/go-openapi/jsonreference v0.19.6 // indirect\n\tgithub.com/go-stack/stack v1.8.0 // indirect\n\tgithub.com/jinzhu/gorm v1.9.16 // indirect\n\tgithub.com/jinzhu/inflection v1.0.0 // indirect\n\tgithub.com/josharian/intern v1.0.0 // indirect\n\tgithub.com/lib/pq v1.1.1 // indirect\n\tgithub.com/mailru/easyjson v0.7.6 // indirect\n\tgithub.com/mattn/go-sqlite3 v1.14.0 // indirect\n\tgithub.com/mitchellh/mapstructure v1.4.1 // indirect\n\tgithub.com/oklog/ulid v1.3.1 // indirect\n\tgithub.com/pkg/errors v0.9.1 // indirect\n\tgithub.com/pmezard/go-difflib v1.0.0 // indirect\n\tgo.mongodb.org/mongo-driver v1.7.3 // indirect\n\tgo.uber.org/atomic v1.7.0 // indirect\n\tgo.uber.org/multierr v1.6.0 // indirect\n\tgolang.org/x/sys v0.0.0-20210420072515-93ed5bcd2bfe // indirect\n\tgolang.org/x/text v0.3.7 // indirect\n\tgopkg.in/yaml.v2 v2.4.0 // indirect\n\tgopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect\n)\n","version":"v0.0.2-1-g8cb47e5"}
+```
+
+### Examples, listing all records
+
+Geting all records:
+
+```sh
+curl 127.0.0.1:8080/v1/tags
+[{"id":3,"name":"gluten free"},{"id":1,"name":"spicy"},{"id":2,"name":"vegan"}]
+
+curl 127.0.0.1:8080/v1/ingredients
+[{"description":"Tomato","id":6,"name":"tomato"},{"description":"Onion","id":7,"name":"onion"},{"description":"Tomato sauce","id":1,"name":"tomato sauce"},{"description":"Bacon","id":3,"name":"bacon"},{"description":"Salami","id":4,"name":"salami"},{"description":"Sour cream sauce","id":2,"name":"sour cream sauce"},{"description":"Mozzarella","id":5,"name":"mozzarella"}]
+
+curl 127.0.0.1:8080/v1/meal/findByTag
+[{"description":"Spicy pizza","id":1,"ingredients":[{"description":"Tomato sauce","id":1,"name":"tomato sauce"},{"description":"Bacon","id":3,"name":"bacon"},{"description":"Salami","id":4,"name":"salami"}],"kcal":123,"name":"Spicy","pictureUrl":"http://a.com","price":3.25,"tags":[{"id":1,"name":"spicy"}]},{"description":"Vegan pizza","id":2,"ingredients":[{"description":"Sour cream sauce","id":2,"name":"sour cream sauce"},{"description":"Mozzarella","id":5,"name":"mozzarella"}],"kcal":234,"name":"Vegan","pictureUrl":"http://a.com","price":4.1,"tags":[{"id":2,"name":"vegan"}]}]
+```
+
+### Examples, filtering meals
+
+Getting meals filtered by tag ID:
+
+```sh
+curl 127.0.0.1:8080/v1/meal/findByTag?tag=1
+[{"description":"Spicy pizza","id":1,"ingredients":[{"description":"Tomato sauce","id":1,"name":"tomato sauce"},{"description":"Bacon","id":3,"name":"bacon"},{"description":"Salami","id":4,"name":"salami"}],"kcal":123,"name":"Spicy","pictureUrl":"http://a.com","price":3.25,"tags":[{"id":1,"name":"spicy"}]}]
+```
+
+Getting only one meal by ID:
+
+```sh
+curl 127.0.0.1:8080/v1/meal/1
+{"description":"Spicy pizza","id":1,"ingredients":[{"description":"Tomato sauce","id":1,"name":"tomato sauce"},{"description":"Bacon","id":3,"name":"bacon"},{"description":"Salami","id":4,"name":"salami"}],"kcal":123,"name":"Spicy","pictureUrl":"http://a.com","price":3.25,"tags":[{"id":1,"name":"spicy"}]}
+```
+
+### Examples, changing data
+
+Creating a new meal (the ID at the end of path is needed, but skipped):
+
+```sh
+curl -X POST -H 'Content-Type: application/json' 127.0.0.1:8080/v1/meal/0 -d '{"description":"Tomato pizza","ingredients":[{"description":"Tomato sauce","id":1,"name":"tomato sauce"}],"kcal":200,"name":"Spicy","pictureUrl":"http://c.com","price":3.25,"tags":[{"id":3,"name":"gluten free"}]}'
+```
+
+Updating a meal (the ID at the end of path is needed, but skipped):
+
+```sh
+curl -X PUT -H 'Content-Type: application/json' 127.0.0.1:8080/v1/meal/0 -d '{"description":"Tomato pizza","id":5,"ingredients":[{"description":"Tomato sauce","id":1,"name":"tomato sauce"}],"kcal":200,"name":"Spicy","pictureUrl":"http://c.com","price":3.55,"tags":[{"id":3,"name":"gluten free"}]}'
+```
+
+Deleting a meal:
+
+```sh
+curl -X DELETE 127.0.0.1:8080/v1/meal/5
+```
+
 ## Development
 
 ### Prerequisites
 
+* Ubuntu
 * Docker
+* `git`
 * `make`
-* Golang compiler, linters are not needed (they are run in container)
+* Golang compiler, linters, etc. are not needed (they are run in container)
 
 ### Building
 
-Builds exacutable binary to `build/bin`.
+Builds exacutable binary to `build/bin/`.
 
 ```sh
 make build
+```
+
+### Image making
+
+Below command makes Docker image:
+
+```sh
+make image
 ```
 
 ### Checks
 
 Includes belows:
 
-* `make test`: `go test`
+* `make test`:`go test`
 * `make lint`: <https://github.com/golangci/golangci-lint>
 * `make shellcheck`: <https://github.com/koalaman/shellcheck>
 * `make mdlint`: <https://github.com/DavidAnson/markdownlint-cli2>
 
 ```sh
 make check
+```
+
+### OpenAPI sleketons
+
+Go source code generating can be executed by below command:
+
+```sh
+make openapi-server
 ```
