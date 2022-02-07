@@ -181,3 +181,8 @@ Go source code generating can be executed by below command:
 ```sh
 make openapi-server
 ```
+
+target dirs:
+
+* `internal/models`
+* `internal/restapi`
