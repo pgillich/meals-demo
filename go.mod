@@ -3,6 +3,7 @@ module github.com/pgillich/meals-demo
 go 1.17
 
 require (
+	emperror.dev/errors v0.8.0
 	github.com/go-openapi/errors v0.20.1
 	github.com/go-openapi/loads v0.21.1
 	github.com/go-openapi/runtime v0.23.0
@@ -11,12 +12,12 @@ require (
 	github.com/go-openapi/swag v0.19.15
 	github.com/go-openapi/validate v0.20.3
 	github.com/jessevdk/go-flags v1.5.0
+	github.com/jinzhu/gorm v1.9.16
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/net v0.0.0-20210421230115-4e50805a0758
 )
 
 require (
-	emperror.dev/errors v0.8.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef // indirect
@@ -26,7 +27,6 @@ require (
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
-	github.com/jinzhu/gorm v1.9.16 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/lib/pq v1.1.1 // indirect
