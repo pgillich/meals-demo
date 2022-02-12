@@ -8,6 +8,8 @@ Demo for a meals service. It's written in Go.
 
 The deployment is worked out for a local Kubernetes described at <https://github.com/pgillich/kind-on-dev> with default values. Add `foodstore.kind-01.company.com` to the `/etc/hosts`, similar to `monitoring.kind-01.company.com`.
 
+Another deployment example is described in [DIGITALOCEAN.md](DIGITALOCEAN.md).
+
 ### Postgres
 
 Run below command:
@@ -19,7 +21,7 @@ kubectl apply -k kubernetes/postgres
 After a while, the postgres service can be accessed on a Load Balancer port, see:
 
 ```sh
-k get svc -n postgres -o wide
+kubectl get svc -n postgres -o wide
 NAME       TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)          AGE   SELECTOR
 postgres   LoadBalancer   10.96.224.184   172.18.1.128   5432:31113/TCP   31m   app=postgres
 ```
@@ -33,6 +35,7 @@ psql (12.9 (Ubuntu 12.9-0ubuntu0.20.04.1), server 10.1)
 Type "help" for help.
 
 postgresdb=# create database foodstore;
+postgresdb=# exit
 ```
 
 The app compiled by `make build` can also be run out of the Kubernetes cluster, for examle:
@@ -53,10 +56,10 @@ Another alternative is pulling the image from Docker Hub, see more info here: <h
 
 ### Service
 
-Review `kubernetes/foodstore/values.yaml` and run below command:
+Review `kubernetes/foodstore/kind_values.yaml` and run below command:
 
 ```sh
-helm install --create-namespace --namespace foodstore foodstore kubernetes/foodstore
+helm install --values ./kubernetes/foodstore/kind_values.yaml --create-namespace --namespace foodstore foodstore ./kubernetes/foodstore
 ```
 
 Above deployment is confugured for Traefik of <https://github.com/pgillich/kind-on-dev>, so the service can be accessed with `http://foodstore.kind-01.company.com`, for example:

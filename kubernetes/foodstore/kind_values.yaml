@@ -1,0 +1,22 @@
+mealService:
+  dbDSN: host=postgres.postgres.svc user=admin password=test123 dbname=foodstore port=5432 sslmode=disable
+  sealedSecret: false
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+  hosts:
+    - host: foodstore.kind-01.company.com
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: foodstore
+              port:
+                number: 80
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
