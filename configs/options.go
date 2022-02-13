@@ -14,7 +14,7 @@ type Options struct {
 	DbDebug bool `long:"db-debug" env:"SERVICE_DB_DEBUG"`
 
 	// AuthIdentityKey is Identity key to JWT
-	AuthIdentityKey string `long:"auth-identity-key" env:"SERVICE_AUTH_IDENTITY_KEY"`
+	JwtKey string `long:"auth-identity-key" env:"SERVICE_JWT_KEY"`
 }
 
 const TestingBasePath = "/v1"

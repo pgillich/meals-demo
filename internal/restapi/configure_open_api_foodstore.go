@@ -10,12 +10,14 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 
+	"github.com/pgillich/meals-demo/internal/models"
 	"github.com/pgillich/meals-demo/internal/restapi/operations"
 	"github.com/pgillich/meals-demo/internal/restapi/operations/info"
 	"github.com/pgillich/meals-demo/internal/restapi/operations/meal"
+	"github.com/pgillich/meals-demo/internal/restapi/operations/user"
 )
 
-//go:generate swagger generate server --target ../../internal --name OpenAPIFoodstore --spec ../../api/foodstore.yaml --principal interface{} --exclude-main
+//go:generate swagger generate server --target ../../internal --name OpenAPIFoodstore --spec ../../api/foodstore.yaml --principal models.User --exclude-main
 
 func configureFlags(api *operations.OpenAPIFoodstoreAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
@@ -39,13 +41,26 @@ func configureAPI(api *operations.OpenAPIFoodstoreAPI) http.Handler {
 
 	api.JSONProducer = runtime.JSONProducer()
 
+	// Applies when the "Authorization" header is set
+	if api.JWTAuth == nil {
+		api.JWTAuth = func(token string) (*models.User, error) {
+			return nil, errors.NotImplemented("api key auth (JWT) Authorization from header param [Authorization] has not yet been implemented")
+		}
+	}
+
+	// Set your custom authorizer if needed. Default one is security.Authorized()
+	// Expected interface runtime.Authorizer
+	//
+	// Example:
+	// api.APIAuthorizer = security.Authorized()
+
 	if api.MealCreateMealHandler == nil {
-		api.MealCreateMealHandler = meal.CreateMealHandlerFunc(func(params meal.CreateMealParams) middleware.Responder {
+		api.MealCreateMealHandler = meal.CreateMealHandlerFunc(func(params meal.CreateMealParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation meal.CreateMeal has not yet been implemented")
 		})
 	}
 	if api.MealDeleteMealHandler == nil {
-		api.MealDeleteMealHandler = meal.DeleteMealHandlerFunc(func(params meal.DeleteMealParams) middleware.Responder {
+		api.MealDeleteMealHandler = meal.DeleteMealHandlerFunc(func(params meal.DeleteMealParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation meal.DeleteMeal has not yet been implemented")
 		})
 	}
@@ -79,8 +94,13 @@ func configureAPI(api *operations.OpenAPIFoodstoreAPI) http.Handler {
 			return middleware.NotImplemented("operation info.GetVersion has not yet been implemented")
 		})
 	}
+	if api.UserLoginHandler == nil {
+		api.UserLoginHandler = user.LoginHandlerFunc(func(params user.LoginParams) middleware.Responder {
+			return middleware.NotImplemented("operation user.Login has not yet been implemented")
+		})
+	}
 	if api.MealUpdateMealHandler == nil {
-		api.MealUpdateMealHandler = meal.UpdateMealHandlerFunc(func(params meal.UpdateMealParams) middleware.Responder {
+		api.MealUpdateMealHandler = meal.UpdateMealHandlerFunc(func(params meal.UpdateMealParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation meal.UpdateMeal has not yet been implemented")
 		})
 	}

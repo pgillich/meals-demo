@@ -13,18 +13,54 @@ tags:
     description: Everything about your Meals
   - name: info
     description: Providing info about service
-#  - name: user
-#    description: Operations about user
+  - name: user
+    description: Operations about user
 schemes:
   - http
+securityDefinitions:
+  JWT:
+    type: apiKey
+    name: Authorization
+    in: header
 paths:
+  '/login':
+    post:
+      description: 'Returns token for authorized User'
+      tags: [user]
+      operationId: login
+      consumes:
+        - "application/json"
+      parameters:
+        - name: 'login'
+          in: 'body'
+          required: true
+          description: 'Login Payload'
+          schema:
+            $ref: '#/definitions/LoginInfo'
+      responses:
+        200:
+          description: Successful login
+          schema:
+            $ref: '#/definitions/LoginSuccess'
+        400:
+          description: Bad Request
+        404:
+          schema:
+            type: string
+          description: User not found
+        500:
+          schema:
+            type: string
+          description: Server error
   '/meal/{id}':
     post:
       tags:
         - meal
       summary: Create a new meal
-      description: ''
+      description: 'the ID at the end of path is needed, but skipped'
       operationId: createMeal
+      security:
+        - JWT: []
       consumes:
         - application/json
       produces:
@@ -48,6 +84,10 @@ paths:
           description: successful operation
           schema:
             $ref: "#/definitions/Meal"
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/ApiError"
         '500':
           description: Error
           schema:
@@ -56,8 +96,10 @@ paths:
       tags:
         - meal
       summary: Update an existing meal
-      description: ''
+      description: 'the ID at the end of path is needed, but skipped'
       operationId: updateMeal
+      security:
+        - JWT: []
       consumes:
         - application/json
       produces:
@@ -81,6 +123,10 @@ paths:
           description: successful operation
           schema:
             $ref: "#/definitions/Meal"
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/ApiError"
         '500':
           description: Error
           schema:
@@ -115,6 +161,8 @@ paths:
       summary: Deletes a meal
       description: ''
       operationId: deleteMeal
+      security:
+        - JWT: []
       produces:
         - application/json
       parameters:
@@ -127,6 +175,10 @@ paths:
       responses:
         '200':
           description: successful operation
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/ApiError"
         '500':
           description: Error
           schema:
@@ -223,6 +275,30 @@ paths:
             $ref: '#/definitions/Version'
 
 definitions:
+  User:
+    type: object
+    properties:
+      email:
+        type: string
+      fullName:
+        type: string
+      password:
+        type: string
+  LoginInfo:
+    type: object
+    required: [email,password]
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+  LoginSuccess:
+    type: object
+    properties:
+      success:
+        type: boolean
+      token:
+        type: string
   Tag:
     title: Meal Tag
     description: A tag for a meal

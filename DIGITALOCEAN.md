@@ -55,10 +55,10 @@ go install github.com/bitnami-labs/sealed-secrets/cmd/kubeseal@v0.17.3
 Example for generating sealed secret:
 
 ```sh
-kubectl create secret generic meal-secret --from-literal=SERVICE_DB_DSN="host=private-db-postgresql-demo-do-user-123456-8.b.db.ondigitalocean.com user=USER password=PASSWORD dbname=DATABASE port=25060 sslmode=require" -o json --dry-run=client | kubeseal --controller-namespace sealed-secrets -o yaml
+kubectl create secret generic -n foodstore meal-secret --from-literal=SERVICE_DB_DSN="host=private-db-postgresql-demo-do-user-123456-8.b.db.ondigitalocean.com user=USER password=PASSWORD dbname=DATABASE port=25060 sslmode=require" --from-literal=SERVICE_JWT_KEY="9876" -o json --dry-run=client | kubeseal --controller-namespace sealed-secrets -o yaml
 ```
 
-Copy the printed out `SERVICE_DB_DSN` value to `kubernetes/foodstore/digitalocean_values.yaml:.mealService.dbDSN`.
+Copy the printed out `SERVICE_DB_DSN` and `SERVICE_JWT_KEY` value to `kubernetes/foodstore/digitalocean_values.yaml:.mealService`.
 
 ## Ingress
 
@@ -91,7 +91,7 @@ Review `kubernetes/foodstore/digitalocean_values.yaml`.
 To install, run below command:
 
 ```sh
-helm install --values ./kubernetes/foodstore/digitalocean_values.yaml --namespace foodstore foodstore ./kubernetes/foodstore
+helm install --values ./kubernetes/foodstore/digitalocean_values.yaml --create-namespace --namespace foodstore foodstore ./kubernetes/foodstore
 ```
 
 To upgrade, run below command:

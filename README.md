@@ -41,7 +41,7 @@ postgresdb=# exit
 The app compiled by `make build` can also be run out of the Kubernetes cluster, for examle:
 
 ```sh
-PORT=8080 SERVICE_DB_DIALECT=postgres SERVICE_DB_DSN="host=172.18.1.128 user=admin password=test123 dbname=foodstore port=5432 sslmode=disable" SERVICE_DB_SAMPLE=true SERVICE_DB_DEBUG=true ./build/bin/meals-demo
+PORT=8080 SERVICE_DB_DIALECT=postgres SERVICE_DB_DSN="host=172.18.1.128 user=admin password=test123 dbname=foodstore port=5432 sslmode=disable" SERVICE_DB_SAMPLE=true SERVICE_DB_DEBUG=true SERVICE_JWT_KEY="1234" ./build/bin/meals-demo
 ```
 
 ### Image
@@ -49,7 +49,7 @@ PORT=8080 SERVICE_DB_DIALECT=postgres SERVICE_DB_DSN="host=172.18.1.128 user=adm
 The built image should be accessible from the cluster. The simplest way to make it accessible for Kind is loading the image, for example:
 
 ```sh
-kind load docker-image --name demo pgillich/meals-demo:v0.0.4
+kind load docker-image --name demo pgillich/meals-demo:v0.0.5
 ```
 
 Another alternative is pulling the image from Docker Hub, see more info here: <https://hub.docker.com/r/pgillich/meals-demo/tags>
@@ -120,22 +120,28 @@ curl 127.0.0.1:8080/v1/meal/1
 
 ### Examples, changing data
 
+Example for getting JWT token:
+
+```sh
+curl -X POST -H 'Content-Type: application/json' 127.0.0.1:8080/v1/login -d '{"email":"yoda@star.wars", "password":"master"}'
+```
+
 Creating a new meal (the ID at the end of path is needed, but skipped):
 
 ```sh
-curl -X POST -H 'Content-Type: application/json' 127.0.0.1:8080/v1/meal/0 -d '{"description":"Tomato pizza","ingredients":[{"description":"Tomato sauce","id":1,"name":"tomato sauce"}],"kcal":200,"name":"Spicy","pictureUrl":"http://c.com","price":3.25,"tags":[{"id":3,"name":"gluten free"}]}'
+curl -X POST -H 'Authorization: Bearer eyJh...' -H 'Content-Type: application/json' 127.0.0.1:8080/v1/meal/0 -d '{"description":"Tomato pizza","ingredients":[{"description":"Tomato sauce","id":1,"name":"tomato sauce"}],"kcal":200,"name":"Spicy","pictureUrl":"http://c.com","price":3.25,"tags":[{"id":3,"name":"gluten free"}]}'
 ```
 
 Updating a meal (the ID at the end of path is needed, but skipped):
 
 ```sh
-curl -X PUT -H 'Content-Type: application/json' 127.0.0.1:8080/v1/meal/0 -d '{"description":"Tomato pizza","id":5,"ingredients":[{"description":"Tomato sauce","id":1,"name":"tomato sauce"}],"kcal":200,"name":"Spicy","pictureUrl":"http://c.com","price":3.55,"tags":[{"id":3,"name":"gluten free"}]}'
+curl -X PUT -H 'Authorization: Bearer eyJh...' -H 'Content-Type: application/json' 127.0.0.1:8080/v1/meal/0 -d '{"description":"Tomato pizza","id":5,"ingredients":[{"description":"Tomato sauce","id":1,"name":"tomato sauce"}],"kcal":200,"name":"Spicy","pictureUrl":"http://c.com","price":3.55,"tags":[{"id":3,"name":"gluten free"}]}'
 ```
 
 Deleting a meal:
 
 ```sh
-curl -X DELETE 127.0.0.1:8080/v1/meal/5
+curl -X DELETE -H 'Authorization: Bearer eyJh...' 127.0.0.1:8080/v1/meal/5
 ```
 
 ## Development

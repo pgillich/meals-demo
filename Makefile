@@ -17,14 +17,10 @@ DOCKER_OPENAPI_VERSION ?= v0.29.0
 DOCKER_OPENAPI_IMAGE ?= swagger:${DOCKER_OPENAPI_VERSION}
 DOCKER_OPENAPI_PATH ?= quay.io/goswagger
 
-DOCKER_OPENAPI_VERSION ?= v0.29.0
-DOCKER_OPENAPI_IMAGE ?= swagger:${DOCKER_OPENAPI_VERSION}
-DOCKER_OPENAPI_PATH ?= quay.io/goswagger
-
 API_PACKAGE_NAME ?= foodstore
 APP_NAME ?= meals-demo
 
-DOCKER_APP_VERSION ?= v0.0.4
+DOCKER_APP_VERSION ?= v0.0.5
 DOCKER_APP_IMAGE ?= ${APP_NAME}:${DOCKER_APP_VERSION}
 DOCKER_APP_PATH ?= pgillich
 
@@ -74,7 +70,11 @@ openapi-server:
 		generate server \
 		-f ${SRC_DIR}/api/foodstore.yaml \
 		-t internal \
+		--principal models.User \
 		--exclude-main
+
+#		--server-package internal/restapi \
+#		--model-package pkg/models
 .PHONY: openapi-server
 
 openapi-view:

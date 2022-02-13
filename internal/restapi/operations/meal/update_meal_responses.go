@@ -57,6 +57,50 @@ func (o *UpdateMealOK) WriteResponse(rw http.ResponseWriter, producer runtime.Pr
 	}
 }
 
+// UpdateMealUnauthorizedCode is the HTTP code returned for type UpdateMealUnauthorized
+const UpdateMealUnauthorizedCode int = 401
+
+/*UpdateMealUnauthorized Unauthorized
+
+swagger:response updateMealUnauthorized
+*/
+type UpdateMealUnauthorized struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.APIError `json:"body,omitempty"`
+}
+
+// NewUpdateMealUnauthorized creates UpdateMealUnauthorized with default headers values
+func NewUpdateMealUnauthorized() *UpdateMealUnauthorized {
+
+	return &UpdateMealUnauthorized{}
+}
+
+// WithPayload adds the payload to the update meal unauthorized response
+func (o *UpdateMealUnauthorized) WithPayload(payload *models.APIError) *UpdateMealUnauthorized {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the update meal unauthorized response
+func (o *UpdateMealUnauthorized) SetPayload(payload *models.APIError) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *UpdateMealUnauthorized) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(401)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
 // UpdateMealInternalServerErrorCode is the HTTP code returned for type UpdateMealInternalServerError
 const UpdateMealInternalServerErrorCode int = 500
 

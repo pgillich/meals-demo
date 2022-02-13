@@ -37,6 +37,50 @@ func (o *DeleteMealOK) WriteResponse(rw http.ResponseWriter, producer runtime.Pr
 	rw.WriteHeader(200)
 }
 
+// DeleteMealUnauthorizedCode is the HTTP code returned for type DeleteMealUnauthorized
+const DeleteMealUnauthorizedCode int = 401
+
+/*DeleteMealUnauthorized Unauthorized
+
+swagger:response deleteMealUnauthorized
+*/
+type DeleteMealUnauthorized struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.APIError `json:"body,omitempty"`
+}
+
+// NewDeleteMealUnauthorized creates DeleteMealUnauthorized with default headers values
+func NewDeleteMealUnauthorized() *DeleteMealUnauthorized {
+
+	return &DeleteMealUnauthorized{}
+}
+
+// WithPayload adds the payload to the delete meal unauthorized response
+func (o *DeleteMealUnauthorized) WithPayload(payload *models.APIError) *DeleteMealUnauthorized {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the delete meal unauthorized response
+func (o *DeleteMealUnauthorized) SetPayload(payload *models.APIError) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *DeleteMealUnauthorized) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(401)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
 // DeleteMealInternalServerErrorCode is the HTTP code returned for type DeleteMealInternalServerError
 const DeleteMealInternalServerErrorCode int = 500
 

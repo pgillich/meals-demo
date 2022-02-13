@@ -1,5 +1,6 @@
 mealService:
   dbDSN: host=postgres.postgres.svc user=admin password=test123 dbname=foodstore port=5432 sslmode=disable
+  jwtKey: "5678"
   sealedSecret: false
 
 ingress:

@@ -8,7 +8,7 @@ image:
   repository: pgillich/meals-demo
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: v0.0.4
+  tag: v0.0.5
 
 mealService:
   host: "0.0.0.0"
