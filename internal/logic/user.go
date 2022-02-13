@@ -54,6 +54,7 @@ func (userAPI *UserAPI) Login(params user.LoginParams) middleware.Responder {
 	if err != nil {
 		return user.NewLoginInternalServerError().WithPayload("Error defining token")
 	}
+
 	return user.NewLoginOK().WithPayload(&models.LoginSuccess{Success: true, Token: token})
 }
 
@@ -69,6 +70,7 @@ func (userAPI *UserAPI) ValidateHeader(bearerHeader string) (*models.User, error
 	if token.Valid {
 		return userAPI.dbHandler.GetUserByEmail(fmt.Sprintf("%v", claims["email"]))
 	}
+
 	return nil, errors.New("invalid token")
 }
 

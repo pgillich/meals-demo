@@ -1,17 +1,22 @@
 package dao
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/pgillich/meals-demo/internal/models"
 )
 
+var (
+	ErrUnknownUser = errors.New("unknown user")
+	ErrBadPassword = errors.New("bad password")
+)
+
 func (dbHandler *Handler) AuthenticateUser(email string, password string) (*models.User, error) {
 	if email != "yoda@star.wars" {
-		return nil, fmt.Errorf("unkown user")
+		return nil, ErrUnknownUser
 	}
 	if password != "master" {
-		return nil, fmt.Errorf("bad password")
+		return nil, ErrBadPassword
 	}
 
 	return dbHandler.GetUserByEmail(email)
@@ -19,7 +24,7 @@ func (dbHandler *Handler) AuthenticateUser(email string, password string) (*mode
 
 func (dbHandler *Handler) GetUserByEmail(email string) (*models.User, error) {
 	if email != "yoda@star.wars" {
-		return nil, fmt.Errorf("unkown user")
+		return nil, ErrUnknownUser
 	}
 
 	return &models.User{

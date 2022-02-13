@@ -48,6 +48,7 @@ func (s *InfoTestSuite) getJwtToken(server *restapi.Server) string {
 	tokenCreated := &models.LoginSuccess{}
 	err = json.Unmarshal(body, tokenCreated)
 	s.NoError(err, "Body")
+
 	return tokenCreated.Token
 }
 

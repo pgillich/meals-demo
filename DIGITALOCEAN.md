@@ -2,6 +2,7 @@
 
 DigitalOcean (DO) deployment.
 
+<!-- markdownlint-disable MD013 -->
 ## Introduction
 
 This doc describes an example deployment to a DO Kubernetes cluster.
@@ -98,4 +99,20 @@ To upgrade, run below command:
 
 ```sh
 helm upgrade --values ./kubernetes/foodstore/digitalocean_values.yaml --namespace foodstore foodstore ./kubernetes/foodstore
+```
+
+## Usage
+
+### Examples, changing data
+
+Example for getting JWT token:
+
+```sh
+curl -X POST -H 'Content-Type: application/json' foodstore-pgillich.mooo.com/v1/login -d '{"email":"yoda@star.wars", "password":"master"}'
+```
+
+Creating a new meal (the ID at the end of path is needed, but skipped):
+
+```sh
+curl -X POST -H 'Authorization: Bearer eyJh...' -H 'Content-Type: application/json' foodstore-pgillich.mooo.com/v1/meal/0 -d '{"description":"Tomato pizza","ingredients":[{"description":"Tomato sauce","id":1,"name":"tomato sauce"}],"kcal":200,"name":"Spicy","pictureUrl":"http://c.com","price":3.25,"tags":[{"id":3,"name":"gluten free"}]}'
 ```
