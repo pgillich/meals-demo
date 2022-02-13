@@ -14,6 +14,6 @@ func RunMeals() {
 
 	defer server.Shutdown() //nolint:errcheck // never mind at exit
 	if err := server.Serve(); err != nil {
-		log.Fatalln(err) //noling:gocritic // never mind at exit
+		log.Fatal(err) //noling:gocritic // never mind at exit
 	}
 }

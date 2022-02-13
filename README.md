@@ -49,7 +49,7 @@ PORT=8080 SERVICE_DB_DIALECT=postgres SERVICE_DB_DSN="host=172.18.1.128 user=adm
 The built image should be accessible from the cluster. The simplest way to make it accessible for Kind is loading the image, for example:
 
 ```sh
-kind load docker-image --name demo pgillich/meals-demo:v0.0.5
+kind load docker-image --name demo pgillich/meals-demo:v0.0.6
 ```
 
 Another alternative is pulling the image from Docker Hub, see more info here: <https://hub.docker.com/r/pgillich/meals-demo/tags>

@@ -13,8 +13,11 @@ type Options struct {
 	// DbDebug enables DB debug messages
 	DbDebug bool `long:"db-debug" env:"SERVICE_DB_DEBUG"`
 
-	// AuthIdentityKey is Identity key to JWT
-	JwtKey string `long:"auth-identity-key" env:"SERVICE_JWT_KEY"`
+	// JwtKey is Identity key to JWT
+	JwtKey string `long:"jwt-key" env:"SERVICE_JWT_KEY"`
+
+	// JwtExpireSec is the JWT expire duration in seconds
+	JwtExpireSec string `long:"jwt-expire-sec" env:"SERVICE_JWT_EXPIRE_SEC"`
 }
 
 const TestingBasePath = "/v1"

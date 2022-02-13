@@ -43,8 +43,8 @@ func (s *InfoTestSuite) getJwtToken(server *restapi.Server) string {
 
 	server.GetHandler().ServeHTTP(w, r)
 
-	s.Equal(http.StatusOK, w.Result().StatusCode, "Status")
 	body = w.Body.Bytes()
+	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
 	tokenCreated := &models.LoginSuccess{}
 	err = json.Unmarshal(body, tokenCreated)
 	s.NoError(err, "Body")
@@ -67,8 +67,8 @@ func (s *InfoTestSuite) TestMealGetTags() {
 	server.GetHandler().ServeHTTP(w, r)
 
 	defaultTags := guessTagIDs(dao.GetDefaultFillTags())
-	s.Equal(http.StatusOK, w.Result().StatusCode, "Status")
 	body := w.Body.Bytes()
+	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
 	tags := []*models.Tag{}
 	err := json.Unmarshal(body, &tags)
 	s.NoError(err, "Body")
@@ -90,8 +90,8 @@ func (s *InfoTestSuite) TestMealGetIngredients() {
 	server.GetHandler().ServeHTTP(w, r)
 
 	defaultIngredients := guessIngredientIDs(dao.GetDefaultFillIngredients())
-	s.Equal(http.StatusOK, w.Result().StatusCode, "Status")
 	body := w.Body.Bytes()
+	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
 	ingredients := []*models.Ingredient{}
 	err := json.Unmarshal(body, &ingredients)
 	s.NoError(err, "Body")
@@ -116,8 +116,8 @@ func (s *InfoTestSuite) TestMealFindMeals() {
 		guessTagIDs(dao.GetDefaultFillTags()),
 		guessIngredientIDs(dao.GetDefaultFillIngredients()),
 	))
-	s.Equal(http.StatusOK, w.Result().StatusCode, "Status")
 	body := w.Body.Bytes()
+	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
 	// fmt.Println(string(body))
 	meals := []*models.Meal{}
 	err := json.Unmarshal(body, &meals)
@@ -139,8 +139,8 @@ func (s *InfoTestSuite) TestMealFindMealsByTags() {
 
 	server.GetHandler().ServeHTTP(w, r)
 
-	s.Equal(http.StatusOK, w.Result().StatusCode, "Status")
 	body := w.Body.Bytes()
+	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
 	//fmt.Println(string(body))
 	meals := []*models.Meal{}
 	err := json.Unmarshal(body, &meals)
@@ -163,7 +163,7 @@ func (s *InfoTestSuite) TestMealDeleteMeal() {
 
 	server.GetHandler().ServeHTTP(w, r)
 
-	s.Equal(http.StatusOK, w.Result().StatusCode, "Status")
+	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+w.Body.String())
 	//body := w.Body.Bytes()
 	//fmt.Println(string(body))
 }
@@ -183,8 +183,8 @@ func (s *InfoTestSuite) TestMealUpdateMeal() {
 
 	server.GetHandler().ServeHTTP(w, r)
 
-	s.Equal(http.StatusOK, w.Result().StatusCode, "Status")
 	body := w.Body.Bytes()
+	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
 	//fmt.Println(string(body))
 	meal := &models.Meal{}
 	err := json.Unmarshal(body, meal)
@@ -201,8 +201,8 @@ func (s *InfoTestSuite) TestMealUpdateMeal() {
 
 	server.GetHandler().ServeHTTP(w, r)
 
-	s.Equal(http.StatusOK, w.Result().StatusCode, "Status")
 	body = w.Body.Bytes()
+	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
 	//fmt.Println(string(body))
 	mealUpdated := &models.Meal{}
 	err = json.Unmarshal(body, mealUpdated)
@@ -214,8 +214,8 @@ func (s *InfoTestSuite) TestMealUpdateMeal() {
 
 	server.GetHandler().ServeHTTP(w, r)
 
-	s.Equal(http.StatusOK, w.Result().StatusCode, "Status")
 	body = w.Body.Bytes()
+	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
 	//fmt.Println(string(body))
 	mealLatest := &models.Meal{}
 	err = json.Unmarshal(body, mealLatest)
@@ -261,8 +261,8 @@ func (s *InfoTestSuite) TestMealCreateMeal() {
 
 	server.GetHandler().ServeHTTP(w, r)
 
-	s.Equal(http.StatusOK, w.Result().StatusCode, "Status")
 	body = w.Body.Bytes()
+	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
 	//fmt.Println(string(body))
 	mealCreated := &models.Meal{}
 	err = json.Unmarshal(body, mealCreated)

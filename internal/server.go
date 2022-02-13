@@ -19,7 +19,7 @@ func BuildServer(
 ) *restapi.Server {
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
 
 	api := operations.NewOpenAPIFoodstoreAPI(swaggerSpec)
@@ -39,7 +39,7 @@ func BuildServer(
 	for _, optsGroup := range api.CommandLineOptionsGroups {
 		_, err := parser.AddGroup(optsGroup.ShortDescription, optsGroup.LongDescription, optsGroup.Options)
 		if err != nil {
-			log.Fatalln(err)
+			log.Fatal(err)
 		}
 	}
 

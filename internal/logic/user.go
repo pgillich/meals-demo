@@ -1,8 +1,8 @@
 package logic
 
 import (
-	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,11 +19,22 @@ import (
 )
 
 func SetUserAPI(config configs.Options, api *operations.OpenAPIFoodstoreAPI) {
-	userAPI := &UserAPI{
-		jwtKey: config.JwtKey,
-		method: jwt.SigningMethodHS256,
-	}
+	var jwtExpireSec int
 	var err error
+	if config.JwtExpireSec != "" {
+		if jwtExpireSec, err = strconv.Atoi(config.JwtExpireSec); err != nil {
+			log.Fatal(err)
+		}
+	}
+	if jwtExpireSec <= 0 {
+		jwtExpireSec = 60 * 60
+	}
+	userAPI := &UserAPI{
+		jwtIssuer:    "foodstore",
+		jwtKey:       config.JwtKey,
+		jwtExpireSec: time.Duration(jwtExpireSec) * time.Second,
+		method:       jwt.SigningMethodHS256,
+	}
 
 	userAPI.dbHandler, err = dao.NewHandler(config)
 	if err != nil {
@@ -36,9 +47,11 @@ func SetUserAPI(config configs.Options, api *operations.OpenAPIFoodstoreAPI) {
 }
 
 type UserAPI struct {
-	dbHandler *dao.Handler
-	jwtKey    string
-	method    jwt.SigningMethod
+	dbHandler    *dao.Handler
+	jwtIssuer    string
+	jwtKey       string
+	jwtExpireSec time.Duration
+	method       jwt.SigningMethod
 }
 
 func (userAPI *UserAPI) Login(params user.LoginParams) middleware.Responder {
@@ -60,7 +73,7 @@ func (userAPI *UserAPI) Login(params user.LoginParams) middleware.Responder {
 
 func (userAPI *UserAPI) ValidateHeader(bearerHeader string) (*models.User, error) {
 	bearerToken := strings.Split(bearerHeader, " ")[1]
-	claims := jwt.MapClaims{}
+	claims := &jwt.StandardClaims{}
 	token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(userAPI.jwtKey), nil
 	})
@@ -68,17 +81,17 @@ func (userAPI *UserAPI) ValidateHeader(bearerHeader string) (*models.User, error
 		return nil, errors.WrapWithDetails(err, "Unable to parse JWT")
 	}
 	if token.Valid {
-		return userAPI.dbHandler.GetUserByEmail(fmt.Sprintf("%v", claims["email"]))
+		return userAPI.dbHandler.GetUserByEmail(claims.Subject)
 	}
 
 	return nil, errors.New("invalid token")
 }
 
 func (userAPI *UserAPI) GenerateJWT(email string) (string, error) {
-	tokenString, err := jwt.NewWithClaims(userAPI.method, jwt.MapClaims{
-		"authorized": true,
-		"email":      email,
-		"exp":        time.Now().Add(time.Minute * 300).Unix(),
+	tokenString, err := jwt.NewWithClaims(userAPI.method, jwt.StandardClaims{
+		Subject:   email,
+		ExpiresAt: time.Now().Add(userAPI.jwtExpireSec).Unix(),
+		Issuer:    "jwtIssuer",
 	}).SignedString([]byte(userAPI.jwtKey))
 	if err != nil {
 		return "", errors.WrapWithDetails(err, "Error generating Token")
