@@ -195,3 +195,103 @@ target dirs:
 
 * `internal/models`
 * `internal/restapi`
+
+## Improvements
+
+Below chapters describe possible improvemts.
+
+### Model
+
+* More description (/id=0 at POST/PUT)
+* gorm.Model ?
+* More DB field tags (uniq, index, uniqueIndex, type, size, check)
+* More OpenAPI field tags (min, max)
+* OpenAPI optional fields (zero value?)
+* Own Go field tags (complex rules)
+* user authentication and authorization
+* OpenAPI 3 (?)
+* Integrating with a HTTP framework (Gin, Echo, …)
+  * <https://github.com/mikkeloscar/gin-swagger>
+
+### Source code
+
+* Log libraries (for centralized log collector/parser)
+  * https://github.com/pgillich/errfmt/tree/emperror
+  * https://github.com/logur/logur
+* Error handling library (emperror ?)
+* Better HTML Status codes (Create: 201)
+* More HTML Status error codes
+* RFC5424, RFC7807
+* separated endpoints, packages, dao for tags, ingredients and user + CRUD
+* Better many-to-many handling (in transaction, use only ID or name fields)
+
+### Development environment
+
+* In-container build/deploy (Skaffold)
+
+### Integration with other components
+
+* Different repo: OpenAPI spec, generated client (Go, JS, etc)
+
+### Repo
+
+* main→master
+
+### Test
+
+* Postgres for `go test`, instead of SQLite (random db & user for each test suite/case)
+* Automatic Unit/Function/Component tests (OpenAPI client)
+* Mocks for unit tests ?
+* Negative tests
+* Table driven tests
+  * <https://github.com/pgillich/date_calculator/blob/main/pkg/calendar/calendar_internal_test.go>
+  * <https://github.com/pgillich/chat-bot/blob/master/pkg/frontend/frontend_test.go#L164>
+* Automatic Integration, System, Stability, Stress tests
+  * <https://github.com/pgillich/chat-bot/blob/master/pkg/frontend/frontend_test.go#L25>
+* Automatic security checks
+  * <https://github.com/pgillich/sample-blog/security/dependabot>
+* Postman examples
+
+Build
+
+* Common Makefile + scripts in a new repo
+* Go builder image, including all needed tools (build, linter)
+* Deployment image, including all needed tool (helm, kubectl)
+* Check: `go.mod` changed during build, `go mod tidy`
+* To `/version` endpoint: `go mod graph`
+
+### Deployments
+
+* sensitive info in Sealed Secrets
+* Makefile + docker for all actions (helm, kustomize)
+* Pod resources
+* GitOps (Flux, ArgoCD)
+* Supporting more clusters easily
+* Helm repository
+* Autofill default records from file (ConfigMap, Secret or SealedSecret) or from Configuration Manager
+* Get all config values from Configuration Manager
+
+### CI
+
+* Integrating to a CI (GitHub CI, Travis CI)
+  * <https://github.com/pgillich/date_calculator/blob/main/.travis.yml>
+  * <https://github.com/pgillich/grafana-tree-panel/tree/main/.github/workflows>
+* Checks, image build & push
+* Automatic master→developer git merge
+* Start E2E tests
+
+### Observability
+
+* `/pprof` endpoint
+* `/metrics` Prometheus endpoint
+* Prometheus Operator PodMonitor, Grafana chart
+* Loki (Promtail)
+* OpenTracing (Jaeger)
+* Alert rules and targets
+
+### HA, Scaling, Zero Downtime, Rollback
+
+* GORM AutoMigration, replicaCount: 1
+* NBC DB schema change
+* autoscaling.enabled = true
+* backup/restore
