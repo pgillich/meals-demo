@@ -79,6 +79,52 @@ func init() {
         }
       }
     },
+    "/login": {
+      "post": {
+        "description": "Returns token for authorized User",
+        "consumes": [
+          "application/json"
+        ],
+        "tags": [
+          "user"
+        ],
+        "operationId": "login",
+        "parameters": [
+          {
+            "description": "Login Payload",
+            "name": "login",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/LoginInfo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful login",
+            "schema": {
+              "$ref": "#/definitions/LoginSuccess"
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "User not found",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/meal/findByTag": {
       "get": {
         "description": "One tag ID can be provided",
@@ -155,6 +201,12 @@ func init() {
         }
       },
       "put": {
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "description": "the ID at the end of path is needed, but skipped",
         "consumes": [
           "application/json"
         ],
@@ -193,6 +245,12 @@ func init() {
               "$ref": "#/definitions/Meal"
             }
           },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            }
+          },
           "500": {
             "description": "Error",
             "schema": {
@@ -202,6 +260,12 @@ func init() {
         }
       },
       "post": {
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "description": "the ID at the end of path is needed, but skipped",
         "consumes": [
           "application/json"
         ],
@@ -240,6 +304,12 @@ func init() {
               "$ref": "#/definitions/Meal"
             }
           },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            }
+          },
           "500": {
             "description": "Error",
             "schema": {
@@ -249,6 +319,11 @@ func init() {
         }
       },
       "delete": {
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
         "produces": [
           "application/json"
         ],
@@ -270,6 +345,12 @@ func init() {
         "responses": {
           "200": {
             "description": "successful operation"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            }
           },
           "500": {
             "description": "Error",
@@ -359,6 +440,32 @@ func init() {
         }
       }
     },
+    "LoginInfo": {
+      "type": "object",
+      "required": [
+        "email",
+        "password"
+      ],
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "LoginSuccess": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "token": {
+          "type": "string"
+        }
+      }
+    },
     "Meal": {
       "description": "A meal",
       "type": "object",
@@ -418,6 +525,20 @@ func init() {
         }
       }
     },
+    "User": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
     "Version": {
       "description": "Version and build info",
       "type": "object",
@@ -438,6 +559,13 @@ func init() {
       }
     }
   },
+  "securityDefinitions": {
+    "JWT": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
   "tags": [
     {
       "description": "Everything about your Meals",
@@ -446,6 +574,10 @@ func init() {
     {
       "description": "Providing info about service",
       "name": "info"
+    },
+    {
+      "description": "Operations about user",
+      "name": "user"
     }
   ]
 }`))
@@ -511,6 +643,52 @@ func init() {
         }
       }
     },
+    "/login": {
+      "post": {
+        "description": "Returns token for authorized User",
+        "consumes": [
+          "application/json"
+        ],
+        "tags": [
+          "user"
+        ],
+        "operationId": "login",
+        "parameters": [
+          {
+            "description": "Login Payload",
+            "name": "login",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/LoginInfo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful login",
+            "schema": {
+              "$ref": "#/definitions/LoginSuccess"
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "User not found",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/meal/findByTag": {
       "get": {
         "description": "One tag ID can be provided",
@@ -587,6 +765,12 @@ func init() {
         }
       },
       "put": {
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "description": "the ID at the end of path is needed, but skipped",
         "consumes": [
           "application/json"
         ],
@@ -625,6 +809,12 @@ func init() {
               "$ref": "#/definitions/Meal"
             }
           },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            }
+          },
           "500": {
             "description": "Error",
             "schema": {
@@ -634,6 +824,12 @@ func init() {
         }
       },
       "post": {
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "description": "the ID at the end of path is needed, but skipped",
         "consumes": [
           "application/json"
         ],
@@ -672,6 +868,12 @@ func init() {
               "$ref": "#/definitions/Meal"
             }
           },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            }
+          },
           "500": {
             "description": "Error",
             "schema": {
@@ -681,6 +883,11 @@ func init() {
         }
       },
       "delete": {
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
         "produces": [
           "application/json"
         ],
@@ -702,6 +909,12 @@ func init() {
         "responses": {
           "200": {
             "description": "successful operation"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            }
           },
           "500": {
             "description": "Error",
@@ -791,6 +1004,32 @@ func init() {
         }
       }
     },
+    "LoginInfo": {
+      "type": "object",
+      "required": [
+        "email",
+        "password"
+      ],
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "LoginSuccess": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "token": {
+          "type": "string"
+        }
+      }
+    },
     "Meal": {
       "description": "A meal",
       "type": "object",
@@ -850,6 +1089,20 @@ func init() {
         }
       }
     },
+    "User": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
     "Version": {
       "description": "Version and build info",
       "type": "object",
@@ -870,6 +1123,13 @@ func init() {
       }
     }
   },
+  "securityDefinitions": {
+    "JWT": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
   "tags": [
     {
       "description": "Everything about your Meals",
@@ -878,6 +1138,10 @@ func init() {
     {
       "description": "Providing info about service",
       "name": "info"
+    },
+    {
+      "description": "Operations about user",
+      "name": "user"
     }
   ]
 }`))

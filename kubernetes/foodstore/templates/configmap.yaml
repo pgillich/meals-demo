@@ -4,7 +4,6 @@ data:
   PORT: "{{ .Values.mealService.port }}"
   SERVICE_DB_DEBUG: "{{ .Values.mealService.dbDebug }}"
   SERVICE_DB_DIALECT: "{{ .Values.mealService.dbDialect }}"
-  SERVICE_DB_DSN: "{{ .Values.mealService.dbDSN }}"
   SERVICE_DB_SAMPLE: "{{ .Values.mealService.dbSample }}"
 kind: ConfigMap
 metadata:

@@ -19,8 +19,10 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
+	"github.com/pgillich/meals-demo/internal/models"
 	"github.com/pgillich/meals-demo/internal/restapi/operations/info"
 	"github.com/pgillich/meals-demo/internal/restapi/operations/meal"
+	"github.com/pgillich/meals-demo/internal/restapi/operations/user"
 )
 
 // NewOpenAPIFoodstoreAPI creates a new OpenAPIFoodstore instance
@@ -45,10 +47,10 @@ func NewOpenAPIFoodstoreAPI(spec *loads.Document) *OpenAPIFoodstoreAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
-		MealCreateMealHandler: meal.CreateMealHandlerFunc(func(params meal.CreateMealParams) middleware.Responder {
+		MealCreateMealHandler: meal.CreateMealHandlerFunc(func(params meal.CreateMealParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation meal.CreateMeal has not yet been implemented")
 		}),
-		MealDeleteMealHandler: meal.DeleteMealHandlerFunc(func(params meal.DeleteMealParams) middleware.Responder {
+		MealDeleteMealHandler: meal.DeleteMealHandlerFunc(func(params meal.DeleteMealParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation meal.DeleteMeal has not yet been implemented")
 		}),
 		MealFindMealsByTagHandler: meal.FindMealsByTagHandlerFunc(func(params meal.FindMealsByTagParams) middleware.Responder {
@@ -69,9 +71,19 @@ func NewOpenAPIFoodstoreAPI(spec *loads.Document) *OpenAPIFoodstoreAPI {
 		InfoGetVersionHandler: info.GetVersionHandlerFunc(func(params info.GetVersionParams) middleware.Responder {
 			return middleware.NotImplemented("operation info.GetVersion has not yet been implemented")
 		}),
-		MealUpdateMealHandler: meal.UpdateMealHandlerFunc(func(params meal.UpdateMealParams) middleware.Responder {
+		UserLoginHandler: user.LoginHandlerFunc(func(params user.LoginParams) middleware.Responder {
+			return middleware.NotImplemented("operation user.Login has not yet been implemented")
+		}),
+		MealUpdateMealHandler: meal.UpdateMealHandlerFunc(func(params meal.UpdateMealParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation meal.UpdateMeal has not yet been implemented")
 		}),
+
+		// Applies when the "Authorization" header is set
+		JWTAuth: func(token string) (*models.User, error) {
+			return nil, errors.NotImplemented("api key auth (JWT) Authorization from header param [Authorization] has not yet been implemented")
+		},
+		// default authorizer is authorized meaning no requests are blocked
+		APIAuthorizer: security.Authorized(),
 	}
 }
 
@@ -108,6 +120,13 @@ type OpenAPIFoodstoreAPI struct {
 	//   - application/json
 	JSONProducer runtime.Producer
 
+	// JWTAuth registers a function that takes a token and returns a principal
+	// it performs authentication based on an api key Authorization provided in the header
+	JWTAuth func(string) (*models.User, error)
+
+	// APIAuthorizer provides access control (ACL/RBAC/ABAC) by providing access to the request and authenticated principal
+	APIAuthorizer runtime.Authorizer
+
 	// MealCreateMealHandler sets the operation handler for the create meal operation
 	MealCreateMealHandler meal.CreateMealHandler
 	// MealDeleteMealHandler sets the operation handler for the delete meal operation
@@ -124,6 +143,8 @@ type OpenAPIFoodstoreAPI struct {
 	MealGetTagsHandler meal.GetTagsHandler
 	// InfoGetVersionHandler sets the operation handler for the get version operation
 	InfoGetVersionHandler info.GetVersionHandler
+	// UserLoginHandler sets the operation handler for the login operation
+	UserLoginHandler user.LoginHandler
 	// MealUpdateMealHandler sets the operation handler for the update meal operation
 	MealUpdateMealHandler meal.UpdateMealHandler
 
@@ -203,6 +224,10 @@ func (o *OpenAPIFoodstoreAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.JWTAuth == nil {
+		unregistered = append(unregistered, "AuthorizationAuth")
+	}
+
 	if o.MealCreateMealHandler == nil {
 		unregistered = append(unregistered, "meal.CreateMealHandler")
 	}
@@ -227,6 +252,9 @@ func (o *OpenAPIFoodstoreAPI) Validate() error {
 	if o.InfoGetVersionHandler == nil {
 		unregistered = append(unregistered, "info.GetVersionHandler")
 	}
+	if o.UserLoginHandler == nil {
+		unregistered = append(unregistered, "user.LoginHandler")
+	}
 	if o.MealUpdateMealHandler == nil {
 		unregistered = append(unregistered, "meal.UpdateMealHandler")
 	}
@@ -245,12 +273,23 @@ func (o *OpenAPIFoodstoreAPI) ServeErrorFor(operationID string) func(http.Respon
 
 // AuthenticatorsFor gets the authenticators for the specified security schemes
 func (o *OpenAPIFoodstoreAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme) map[string]runtime.Authenticator {
-	return nil
+	result := make(map[string]runtime.Authenticator)
+	for name := range schemes {
+		switch name {
+		case "JWT":
+			scheme := schemes[name]
+			result[name] = o.APIKeyAuthenticator(scheme.Name, scheme.In, func(token string) (interface{}, error) {
+				return o.JWTAuth(token)
+			})
+
+		}
+	}
+	return result
 }
 
 // Authorizer returns the registered authorizer
 func (o *OpenAPIFoodstoreAPI) Authorizer() runtime.Authorizer {
-	return nil
+	return o.APIAuthorizer
 }
 
 // ConsumersFor gets the consumers for the specified media types.
@@ -350,6 +389,10 @@ func (o *OpenAPIFoodstoreAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/version"] = info.NewGetVersion(o.context, o.InfoGetVersionHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/login"] = user.NewLogin(o.context, o.UserLoginHandler)
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}

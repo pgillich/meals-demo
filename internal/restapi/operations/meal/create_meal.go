@@ -9,19 +9,21 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
+
+	"github.com/pgillich/meals-demo/internal/models"
 )
 
 // CreateMealHandlerFunc turns a function with the right signature into a create meal handler
-type CreateMealHandlerFunc func(CreateMealParams) middleware.Responder
+type CreateMealHandlerFunc func(CreateMealParams, *models.User) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreateMealHandlerFunc) Handle(params CreateMealParams) middleware.Responder {
-	return fn(params)
+func (fn CreateMealHandlerFunc) Handle(params CreateMealParams, principal *models.User) middleware.Responder {
+	return fn(params, principal)
 }
 
 // CreateMealHandler interface for that can handle valid create meal params
 type CreateMealHandler interface {
-	Handle(CreateMealParams) middleware.Responder
+	Handle(CreateMealParams, *models.User) middleware.Responder
 }
 
 // NewCreateMeal creates a new http.Handler for the create meal operation
@@ -32,6 +34,8 @@ func NewCreateMeal(ctx *middleware.Context, handler CreateMealHandler) *CreateMe
 /* CreateMeal swagger:route POST /meal/{id} meal createMeal
 
 Create a new meal
+
+the ID at the end of path is needed, but skipped
 
 */
 type CreateMeal struct {
@@ -45,12 +49,25 @@ func (o *CreateMeal) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		*r = *rCtx
 	}
 	var Params = NewCreateMealParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal *models.User
+	if uprinc != nil {
+		principal = uprinc.(*models.User) // this is really a models.User, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

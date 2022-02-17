@@ -39,3 +39,6 @@ spec:
           {{- end }}
     {{- end }}
   {{- end }}
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}

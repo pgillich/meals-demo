@@ -8,6 +8,8 @@ Demo for a meals service. It's written in Go.
 
 The deployment is worked out for a local Kubernetes described at <https://github.com/pgillich/kind-on-dev> with default values. Add `foodstore.kind-01.company.com` to the `/etc/hosts`, similar to `monitoring.kind-01.company.com`.
 
+Another deployment example is described in [DIGITALOCEAN.md](DIGITALOCEAN.md).
+
 ### Postgres
 
 Run below command:
@@ -19,7 +21,7 @@ kubectl apply -k kubernetes/postgres
 After a while, the postgres service can be accessed on a Load Balancer port, see:
 
 ```sh
-k get svc -n postgres -o wide
+kubectl get svc -n postgres -o wide
 NAME       TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)          AGE   SELECTOR
 postgres   LoadBalancer   10.96.224.184   172.18.1.128   5432:31113/TCP   31m   app=postgres
 ```
@@ -33,12 +35,13 @@ psql (12.9 (Ubuntu 12.9-0ubuntu0.20.04.1), server 10.1)
 Type "help" for help.
 
 postgresdb=# create database foodstore;
+postgresdb=# exit
 ```
 
 The app compiled by `make build` can also be run out of the Kubernetes cluster, for examle:
 
 ```sh
-PORT=8080 SERVICE_DB_DIALECT=postgres SERVICE_DB_DSN="host=172.18.1.128 user=admin password=test123 dbname=foodstore port=5432 sslmode=disable" SERVICE_DB_SAMPLE=true SERVICE_DB_DEBUG=true ./build/bin/meals-demo
+PORT=8080 SERVICE_DB_DIALECT=postgres SERVICE_DB_DSN="host=172.18.1.128 user=admin password=test123 dbname=foodstore port=5432 sslmode=disable" SERVICE_DB_SAMPLE=true SERVICE_DB_DEBUG=true SERVICE_JWT_KEY="1234" ./build/bin/meals-demo
 ```
 
 ### Image
@@ -46,17 +49,17 @@ PORT=8080 SERVICE_DB_DIALECT=postgres SERVICE_DB_DSN="host=172.18.1.128 user=adm
 The built image should be accessible from the cluster. The simplest way to make it accessible for Kind is loading the image, for example:
 
 ```sh
-kind load docker-image --name demo pgillich/meals-demo:v0.0.4
+kind load docker-image --name demo pgillich/meals-demo:v0.0.6
 ```
 
 Another alternative is pulling the image from Docker Hub, see more info here: <https://hub.docker.com/r/pgillich/meals-demo/tags>
 
 ### Service
 
-Review `kubernetes/foodstore/values.yaml` and run below command:
+Review `kubernetes/foodstore/kind_values.yaml` and run below command:
 
 ```sh
-helm install --create-namespace --namespace foodstore foodstore kubernetes/foodstore
+helm install --values ./kubernetes/foodstore/kind_values.yaml --create-namespace --namespace foodstore foodstore ./kubernetes/foodstore
 ```
 
 Above deployment is confugured for Traefik of <https://github.com/pgillich/kind-on-dev>, so the service can be accessed with `http://foodstore.kind-01.company.com`, for example:
@@ -117,22 +120,28 @@ curl 127.0.0.1:8080/v1/meal/1
 
 ### Examples, changing data
 
+Example for getting JWT token:
+
+```sh
+curl -X POST -H 'Content-Type: application/json' 127.0.0.1:8080/v1/login -d '{"email":"yoda@star.wars", "password":"master"}'
+```
+
 Creating a new meal (the ID at the end of path is needed, but skipped):
 
 ```sh
-curl -X POST -H 'Content-Type: application/json' 127.0.0.1:8080/v1/meal/0 -d '{"description":"Tomato pizza","ingredients":[{"description":"Tomato sauce","id":1,"name":"tomato sauce"}],"kcal":200,"name":"Spicy","pictureUrl":"http://c.com","price":3.25,"tags":[{"id":3,"name":"gluten free"}]}'
+curl -X POST -H 'Authorization: Bearer eyJh...' -H 'Content-Type: application/json' 127.0.0.1:8080/v1/meal/0 -d '{"description":"Tomato pizza","ingredients":[{"description":"Tomato sauce","id":1,"name":"tomato sauce"}],"kcal":200,"name":"Spicy","pictureUrl":"http://c.com","price":3.25,"tags":[{"id":3,"name":"gluten free"}]}'
 ```
 
 Updating a meal (the ID at the end of path is needed, but skipped):
 
 ```sh
-curl -X PUT -H 'Content-Type: application/json' 127.0.0.1:8080/v1/meal/0 -d '{"description":"Tomato pizza","id":5,"ingredients":[{"description":"Tomato sauce","id":1,"name":"tomato sauce"}],"kcal":200,"name":"Spicy","pictureUrl":"http://c.com","price":3.55,"tags":[{"id":3,"name":"gluten free"}]}'
+curl -X PUT -H 'Authorization: Bearer eyJh...' -H 'Content-Type: application/json' 127.0.0.1:8080/v1/meal/0 -d '{"description":"Tomato pizza","id":5,"ingredients":[{"description":"Tomato sauce","id":1,"name":"tomato sauce"}],"kcal":200,"name":"Spicy","pictureUrl":"http://c.com","price":3.55,"tags":[{"id":3,"name":"gluten free"}]}'
 ```
 
 Deleting a meal:
 
 ```sh
-curl -X DELETE 127.0.0.1:8080/v1/meal/5
+curl -X DELETE -H 'Authorization: Bearer eyJh...' 127.0.0.1:8080/v1/meal/5
 ```
 
 ## Development
@@ -186,3 +195,103 @@ target dirs:
 
 * `internal/models`
 * `internal/restapi`
+
+## Improvements
+
+Below chapters describe possible improvemts.
+
+### Model
+
+* More description (/id=0 at POST/PUT)
+* gorm.Model ?
+* More DB field tags (uniq, index, uniqueIndex, type, size, check)
+* More OpenAPI field tags (min, max)
+* OpenAPI optional fields (zero value?)
+* Own Go field tags (complex rules)
+* user authentication and authorization
+* OpenAPI 3 (?)
+* Integrating with a HTTP framework (Gin, Echo, …)
+  * <https://github.com/mikkeloscar/gin-swagger>
+
+### Source code
+
+* Log libraries (for centralized log collector/parser)
+  * https://github.com/pgillich/errfmt/tree/emperror
+  * https://github.com/logur/logur
+* Error handling library (emperror ?)
+* Better HTML Status codes (Create: 201)
+* More HTML Status error codes
+* RFC5424, RFC7807
+* separated endpoints, packages, dao for tags, ingredients and user + CRUD
+* Better many-to-many handling (in transaction, use only ID or name fields)
+
+### Development environment
+
+* In-container build/deploy (Skaffold)
+
+### Integration with other components
+
+* Different repo: OpenAPI spec, generated client (Go, JS, etc)
+
+### Repo
+
+* main→master
+
+### Test
+
+* Postgres for `go test`, instead of SQLite (random db & user for each test suite/case)
+* Automatic Unit/Function/Component tests (OpenAPI client)
+* Mocks for unit tests ?
+* Negative tests
+* Table driven tests
+  * <https://github.com/pgillich/date_calculator/blob/main/pkg/calendar/calendar_internal_test.go>
+  * <https://github.com/pgillich/chat-bot/blob/master/pkg/frontend/frontend_test.go#L164>
+* Automatic Integration, System, Stability, Stress tests
+  * <https://github.com/pgillich/chat-bot/blob/master/pkg/frontend/frontend_test.go#L25>
+* Automatic security checks
+  * <https://github.com/pgillich/sample-blog/security/dependabot>
+* Postman examples
+
+Build
+
+* Common Makefile + scripts in a new repo
+* Go builder image, including all needed tools (build, linter)
+* Deployment image, including all needed tool (helm, kubectl)
+* Check: `go.mod` changed during build, `go mod tidy`
+* To `/version` endpoint: `go mod graph`
+
+### Deployments
+
+* sensitive info in Sealed Secrets
+* Makefile + docker for all actions (helm, kustomize)
+* Pod resources
+* GitOps (Flux, ArgoCD)
+* Supporting more clusters easily
+* Helm repository
+* Autofill default records from file (ConfigMap, Secret or SealedSecret) or from Configuration Manager
+* Get all config values from Configuration Manager
+
+### CI
+
+* Integrating to a CI (GitHub CI, Travis CI)
+  * <https://github.com/pgillich/date_calculator/blob/main/.travis.yml>
+  * <https://github.com/pgillich/grafana-tree-panel/tree/main/.github/workflows>
+* Checks, image build & push
+* Automatic master→developer git merge
+* Start E2E tests
+
+### Observability
+
+* `/pprof` endpoint
+* `/metrics` Prometheus endpoint
+* Prometheus Operator PodMonitor, Grafana chart
+* Loki (Promtail)
+* OpenTracing (Jaeger)
+* Alert rules and targets
+
+### HA, Scaling, Zero Downtime, Rollback
+
+* GORM AutoMigration, replicaCount: 1
+* NBC DB schema change
+* autoscaling.enabled = true
+* backup/restore

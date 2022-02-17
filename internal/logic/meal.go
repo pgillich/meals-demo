@@ -54,7 +54,7 @@ func (mealAPI *MealAPI) GetIngredients(params meal.GetIngredientsParams) middlew
 	}
 }
 
-func (mealAPI *MealAPI) CreateMeal(params meal.CreateMealParams) middleware.Responder {
+func (mealAPI *MealAPI) CreateMeal(params meal.CreateMealParams, user *models.User) middleware.Responder {
 	if params.Body == nil {
 		return meal.NewCreateMealInternalServerError().WithPayload(&models.APIError{
 			Message: "meal is required",
@@ -70,7 +70,7 @@ func (mealAPI *MealAPI) CreateMeal(params meal.CreateMealParams) middleware.Resp
 	}
 }
 
-func (mealAPI *MealAPI) UpdateMeal(params meal.UpdateMealParams) middleware.Responder {
+func (mealAPI *MealAPI) UpdateMeal(params meal.UpdateMealParams, user *models.User) middleware.Responder {
 	if params.Body == nil {
 		return meal.NewUpdateMealInternalServerError().WithPayload(&models.APIError{
 			Message: "meal is required",
@@ -86,7 +86,7 @@ func (mealAPI *MealAPI) UpdateMeal(params meal.UpdateMealParams) middleware.Resp
 	}
 }
 
-func (mealAPI *MealAPI) DeleteMeal(params meal.DeleteMealParams) middleware.Responder {
+func (mealAPI *MealAPI) DeleteMeal(params meal.DeleteMealParams, user *models.User) middleware.Responder {
 	if err := mealAPI.dbHandler.DeleteMeal(params.ID); err != nil {
 		return meal.NewDeleteMealInternalServerError().WithPayload(&models.APIError{
 			Message: err.Error(),

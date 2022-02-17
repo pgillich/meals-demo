@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	emperror.dev/errors v0.8.0
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-openapi/errors v0.20.1
 	github.com/go-openapi/loads v0.21.1
 	github.com/go-openapi/runtime v0.23.0

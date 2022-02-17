@@ -1,0 +1,25 @@
+replicaCount: 1
+
+mealService:
+  dbDSN: AgCJv6z6c7wcam2CCKzJwDe1Sj8jcf/HRxij8+dOiKfhBWTNGztVEZxd7bPJeO31nutIpnUbl314AP+FA1g+j1pbpMLvC6AAOGhSn2i/BorMyoLXmt1utCF99lRaL/mgNVwAmH80lWd7Qgwc8jM/YmX4dr0yAAisdncAZX3RklIbmcD2shwiY/fFkU2ZC4UWyNMMqOHbIMdz7fbMwX0HAlC4WTw6T5iCRZ0vudk358lvEJ0IHXuImbTpCC842vZRukfxM3L9TXgdWq5dg+I/TXJSlEC1oVy/uGBVPJbFHaRAO5D18HIDSrEXvREcHOabK3WW78tf9g8V7F37NnT9zh2sm79Yb3uryaCG6v9I2gfcUTiYJOm0kUAC2csY36NJNwLDwr8wa18GGRN+4EZeAH30LMpcWWA2n0yRZILo16h4CC/Qc91VorPYfR2sZWOnnj5lTkGOl1UhoGqgn/teFO9ezTwlQVdVv4D29jR25l1dl3vD4sIg/cddRNmiyq2PX/GlcBO3raP/uYw2j3Ffb5EIrfXRrReP/pAMaGmjDQ0CVXLagrrQI6kMCHVZ9z4mTATOozx61BuA6a7R9hRGP5D26sgr7bPxWjFnZo65y4VN0HA+zNikdfpLyvgt2ipjGAm+mzy/5SKdZcFzitQxUKO01YLIRnZZX18kXu2AnYPe03jFK2Mdguldx0fjlDshRzHjprf9i5WL3C/FX2mXPcjLNWqCps7jBB/3X7HVruvQ6m3PpoYnTGCMSRgbzAare5hjrZ9WgccxF5wIAsetCeECAsfTSDwcMtlr3EU/I+QEXs5TghFVg4c0w2fWqjFJDPL1wQT+YH7SYHLh5pkA2gXKsCHZFaMKCBj+87frHZAzTOum8yi0yfD1nPcDqpU+QD99LG3aXktN9nqM
+  jwtKey: AgCRN7lvwKBYCpbKm34Tec+TuVkA+C6Ul1k9kQSIfRzzzhUt0wdPLsT+Ye21zncHgEVBKKSOHPpg9HkF46mj77iU+MjcjCe7MFRYZZb2JfVnMPRBEQZgHYeyN8B35QTqoQhsy46ueS4WJLQ2TAiIEFPNXQgz60faQL+3YamclPky9ZE1id5YhgpGnRmXhZaVsGvtgK8QTiLRX0ACFgsQChGYoD4GZbuhiH72xon3Kq32cQvkLzM6nRg6fVFv80dDjGhnAY4OR7anak+cn0O5YyU1ihhFpH0iN2dpRxZSoRun55pplOk+VQJyUElpZzOylsdrj7tmAsRL4UqIlAP4rZjzRftS+T2w62LeMtGfYUT9sKVjQlOIkevYPGUxJcmTCMQkvjMGzTjkdxnGhtw3zQYbPgGuyArhMf3F31ZjjJMVtR1GHvoKIYvKvbwjsfgUOTidpme84mb+hVnh886lsD/nrgh0b4Fk1qdPnD44rSAsk06OyH7+bpU49gwCHpt8WhrsEvfw/ZtESOJsVd50dVnkgCye8NjhcaJNScH8GUuTlTW7PfY43zSk8ATPLTzu2jk+jzUx/33kfERSaSYPNH2lYU1jfbYP7tc0tAoJvRbQxoNe/Xf15LiZ4QzjVO55JW167ZoF7ErGhTMu60AFLWB/3NqK2GGFeyyM1hD+y7Ucftp3NJglvtglgzA4HeXjIcls21XFX0k=
+  sealedSecret: true
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: foodstore-pgillich.mooo.com
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: foodstore
+              port:
+                number: 80
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
