@@ -216,8 +216,8 @@ Below chapters describe possible improvemts.
 ### Source code
 
 * Log libraries (for centralized log collector/parser)
-  * https://github.com/pgillich/errfmt/tree/emperror
-  * https://github.com/logur/logur
+  * <https://github.com/pgillich/errfmt/tree/emperror>
+  * <https://github.com/logur/logur>
 * Error handling library (emperror ?)
 * Better HTML Status codes (Create: 201)
 * More HTML Status error codes

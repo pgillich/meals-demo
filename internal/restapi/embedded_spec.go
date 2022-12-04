@@ -493,7 +493,8 @@ func init() {
           "type": "number"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-go-custom-tag": "valid:\"customNameValidator\""
         },
         "pictureUrl": {
           "type": "string"
@@ -1057,7 +1058,8 @@ func init() {
           "type": "number"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-go-custom-tag": "valid:\"customNameValidator\""
         },
         "pictureUrl": {
           "type": "string"

@@ -36,7 +36,7 @@ type Meal struct {
 
 	// name
 	// Required: true
-	Name *string `json:"name"`
+	Name *string `json:"name" valid:"customNameValidator"`
 
 	// picture Url
 	PictureURL string `json:"pictureUrl,omitempty"`

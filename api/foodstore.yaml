@@ -336,6 +336,7 @@ definitions:
         "x-go-custom-tag": "gorm:\"primaryKey\""
       name:
         type: string
+        "x-go-custom-tag": "valid:\"customNameValidator\""
       price:
         type: number
       ingredients:
