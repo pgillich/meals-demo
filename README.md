@@ -201,8 +201,7 @@ make openapi-server
 
 target dirs:
 
-* `internal/models`
-* `internal/restapi`
+* `internal/api`
 
 ## Improvements
 
