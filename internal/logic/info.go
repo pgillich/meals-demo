@@ -1,29 +1,21 @@
 package logic
 
 import (
-	"github.com/go-openapi/runtime/middleware"
+	"context"
 
-	"github.com/pgillich/meals-demo/configs"
+	"github.com/pgillich/meals-demo/internal/api"
 	"github.com/pgillich/meals-demo/internal/buildinfo"
-	"github.com/pgillich/meals-demo/internal/models"
-	"github.com/pgillich/meals-demo/internal/restapi/operations"
-	"github.com/pgillich/meals-demo/internal/restapi/operations/info"
 )
 
-func SetInfoAPI(config configs.Options, api *operations.OpenAPIFoodstoreAPI) {
-	api.InfoGetLivezHandler = info.GetLivezHandlerFunc(GetLivez)
-	api.InfoGetVersionHandler = info.GetVersionHandlerFunc(GetVersion)
+func (fs *FoodStore) GetLivez(ctx context.Context, request api.GetLivezRequestObject) (api.GetLivezResponseObject, error) {
+	return &api.GetLivez200Response{}, nil
 }
 
-func GetLivez(params info.GetLivezParams) middleware.Responder {
-	return info.NewGetLivezOK()
-}
-
-func GetVersion(params info.GetVersionParams) middleware.Responder {
-	return info.NewGetVersionOK().WithPayload(&models.Version{
+func (fs *FoodStore) GetVersion(ctx context.Context, request api.GetVersionRequestObject) (api.GetVersionResponseObject, error) {
+	return &api.GetVersion200JSONResponse{
 		AppName:   buildinfo.AppName,
 		BuildTime: buildinfo.BuildTime,
 		Version:   buildinfo.Version,
 		GoMod:     buildinfo.GoMod,
-	})
+	}, nil
 }

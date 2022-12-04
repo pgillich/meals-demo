@@ -1,13 +1,11 @@
-swagger: '2.0'
+openapi: 3.0.0
 info:
-  description: 'This is demo for a foodstore (meals) service'
+  description: This is demo for a foodstore (meals) service
   version: 1.0.0
   title: OpenAPI Foodstore
   license:
     name: Apache-2.0
-    url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
-host: foodstore.kind-01.company.com
-basePath: /v1
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
 tags:
   - name: meal
     description: Everything about your Meals
@@ -15,241 +13,264 @@ tags:
     description: Providing info about service
   - name: user
     description: Operations about user
-schemes:
-  - http
-securityDefinitions:
-  JWT:
-    type: apiKey
-    name: Authorization
-    in: header
 paths:
-  '/login':
+  /login:
     post:
-      description: 'Returns token for authorized User'
-      tags: [user]
+      description: Returns token for authorized User
+      tags:
+        - user
       operationId: login
-      consumes:
-        - "application/json"
-      parameters:
-        - name: 'login'
-          in: 'body'
-          required: true
-          description: 'Login Payload'
-          schema:
-            $ref: '#/definitions/LoginInfo'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInfo"
+        description: Login Payload
+        required: true
       responses:
-        200:
+        "200":
           description: Successful login
-          schema:
-            $ref: '#/definitions/LoginSuccess'
-        400:
-          description: Bad Request
-        404:
-          schema:
-            type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginSuccess"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
           description: User not found
-        500:
-          schema:
-            type: string
+          content:
+            "*/*":
+              schema:
+                type: string
+        "500":
           description: Server error
-  '/meal/{id}':
+          content:
+            "*/*":
+              schema:
+                type: string
+  "/meal/{id}":
     post:
       tags:
         - meal
       summary: Create a new meal
-      description: 'the ID at the end of path is needed, but skipped'
+      description: the ID at the end of path is needed, but skipped
       operationId: createMeal
       security:
         - JWT: []
-      consumes:
-        - application/json
-      produces:
-        - application/json
       parameters:
-        - in: body
-          name: body
-          description: Meal object that needs to be created
-          required: true
-          schema:
-            $ref: '#/definitions/Meal'
         - name: id
           in: path
           description: ID for generator workaround
-          default: -1
           required: true
-          type: integer
-          format: int64
+          schema:
+            type: integer
+            format: int64
+            default: -1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Meal"
+        description: Meal object that needs to be created
+        required: true
       responses:
-        '200':
+        "200":
           description: successful operation
-          schema:
-            $ref: "#/definitions/Meal"
-        '401':
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meal"
+        "401":
           description: Unauthorized
-          schema:
-            $ref: "#/definitions/ApiError"
-        '500':
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
           description: Error
-          schema:
-            $ref: "#/definitions/ApiError"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
     put:
       tags:
         - meal
       summary: Update an existing meal
-      description: 'the ID at the end of path is needed, but skipped'
+      description: the ID at the end of path is needed, but skipped
       operationId: updateMeal
       security:
         - JWT: []
-      consumes:
-        - application/json
-      produces:
-        - application/json
       parameters:
-        - in: body
-          name: body
-          description: Mea object that needs to be updated
-          required: true
-          schema:
-            $ref: '#/definitions/Meal'
         - name: id
           in: path
           description: ID for generator workaround
-          default: -1
           required: true
-          type: integer
-          format: int64
+          schema:
+            type: integer
+            format: int64
+            default: -1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Meal"
+        description: Mea object that needs to be updated
+        required: true
       responses:
-        '200':
+        "200":
           description: successful operation
-          schema:
-            $ref: "#/definitions/Meal"
-        '401':
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meal"
+        "401":
           description: Unauthorized
-          schema:
-            $ref: "#/definitions/ApiError"
-        '500':
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
           description: Error
-          schema:
-            $ref: "#/definitions/ApiError"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
     get:
       tags:
         - meal
       summary: Find meal by ID
       description: Returns a single meal
       operationId: getMealById
-      produces:
-        - application/json
       parameters:
         - name: id
           in: path
           description: ID of meal to return
           required: true
-          type: integer
-          format: int64
+          schema:
+            type: integer
+            format: int64
       responses:
-        '200':
+        "200":
           description: successful operation
-          schema:
-            $ref: '#/definitions/Meal'
-        '500':
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meal"
+        "500":
           description: Error
-          schema:
-            $ref: "#/definitions/ApiError"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
     delete:
       tags:
         - meal
       summary: Deletes a meal
-      description: ''
+      description: ""
       operationId: deleteMeal
       security:
         - JWT: []
-      produces:
-        - application/json
       parameters:
         - name: id
           in: path
           description: Meal id to delete
           required: true
-          type: integer
-          format: int64
+          schema:
+            type: integer
+            format: int64
       responses:
-        '200':
+        "200":
           description: successful operation
-        '401':
+        "401":
           description: Unauthorized
-          schema:
-            $ref: "#/definitions/ApiError"
-        '500':
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
           description: Error
-          schema:
-            $ref: "#/definitions/ApiError"
-  '/meal/findByTag':
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /meal/findByTag:
     get:
       tags:
         - meal
       summary: Finds Meals by tag
-      description: 'One tag ID can be provided'
+      description: One tag ID can be provided
       operationId: findMealsByTag
-      produces:
-        - application/json
       parameters:
         - name: tag
           in: query
           description: Tag to filter by
-          type: integer
-          format: int64
+          schema:
+            type: integer
+            format: int64
       responses:
-        '200':
+        "200":
           description: successful operation
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Meal'
-        '500':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Meal"
+        "500":
           description: Error
-          schema:
-            $ref: "#/definitions/ApiError"
-  '/tags':
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /tags:
     get:
       tags:
         - meal
       summary: Get all tags
-      description: 'All tags are stored'
+      description: All tags are stored
       operationId: getTags
-      produces:
-        - application/json
       responses:
-        '200':
+        "200":
           description: successful operation
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Tag'
-        '500':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tag"
+        "500":
           description: Invalid tag value
-          schema:
-            $ref: "#/definitions/ApiError"
-  '/ingredients':
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /ingredients:
     get:
       tags:
         - meal
       summary: Get all ingredients
-      description: 'll ingredients are stored'
+      description: ll ingredients are stored
       operationId: getIngredients
-      produces:
-        - application/json
       responses:
-        '200':
+        "200":
           description: successful operation
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Ingredient'
-        '500':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ingredient"
+        "500":
           description: Invalid tag value
-          schema:
-            $ref: "#/definitions/ApiError"
-  '/livez':
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /livez:
     get:
       tags:
         - info
@@ -257,118 +278,162 @@ paths:
       description: Returns OK
       operationId: getLivez
       responses:
-        '200':
+        "200":
           description: successful operation
-  '/version':
+  /version:
     get:
       tags:
         - info
       summary: Version
       description: Version anf build info
       operationId: getVersion
-      produces:
-        - application/json
       responses:
-        '200':
+        "200":
           description: successful operation
-          schema:
-            $ref: '#/definitions/Version'
-
-definitions:
-  User:
-    type: object
-    properties:
-      email:
-        type: string
-      fullName:
-        type: string
-      password:
-        type: string
-  LoginInfo:
-    type: object
-    required: [email,password]
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-  LoginSuccess:
-    type: object
-    properties:
-      success:
-        type: boolean
-      token:
-        type: string
-  Tag:
-    title: Meal Tag
-    description: A tag for a meal
-    type: object
-    properties:
-      id:
-        type: integer
-        format: int64
-        "x-go-custom-tag": "gorm:\"primaryKey\""
-      name:
-        type: string
-  Ingredient:
-    title: Meal Ingredient
-    description: An ingredient for a meal
-    type: object
-    properties:
-      id:
-        type: integer
-        format: int64
-        "x-go-custom-tag": "gorm:\"primaryKey\""
-      name:
-        type: string
-      description:
-        type: string
-  Meal:
-    title: Meal
-    description: A meal
-    type: object
-    required:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Version"
+servers:
+  - url: http://foodstore.kind-01.company.com/v1
+components:
+  securitySchemes:
+    JWT:
+      type: apiKey
+      name: Authorization
+      in: header
+  schemas:
+    User:
+      type: object
+      required:
+      - email
+      - fullName
+      - password
+      properties:
+        email:
+          type: string
+        fullName:
+          type: string
+        password:
+          type: string
+    LoginInfo:
+      type: object
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    LoginSuccess:
+      type: object
+      required:
+      - success
+      - token
+      properties:
+        success:
+          type: boolean
+        token:
+          type: string
+    Tag:
+      title: Meal Tag
+      description: A tag for a meal
+      type: object
+      required:
+      - id
       - name
-    properties:
-      id:
-        type: integer
-        format: int64
-        "x-go-custom-tag": "gorm:\"primaryKey\""
-      name:
-        type: string
-      price:
-        type: number
-      ingredients:
-        type: array
-        "x-go-custom-tag": "gorm:\"many2many:meal_ingredients\""
-        items:
-          $ref: '#/definitions/Ingredient'
-      pictureUrl:
-        type: string
-      tags:
-        type: array
-        "x-go-custom-tag": "gorm:\"many2many:meal_tags\""
-        items:
-          $ref: '#/definitions/Tag'
-      description:
-        type: string
-      kcal:
-        type: number
-  Version:
-    title: Version
-    description: Version and build info
-    type: object
-    properties:
-      version:
-        type: string
-      buildTime:
-        type: string
-      appName:
-        type: string
-      goMod:
-        type: string
-  ApiError:
-    type: "object"
-    properties:
-      message:
-        type: "string"
+      properties:
+        id:
+          type: integer
+          format: int64
+          x-oapi-codegen-extra-tags: 
+            gorm: "primaryKey"
+        name:
+          type: string
+    Ingredient:
+      title: Meal Ingredient
+      description: An ingredient for a meal
+      type: object
+      required:
+      - id
+      - name
+      - description
+      properties:
+        id:
+          type: integer
+          format: int64
+          x-oapi-codegen-extra-tags:
+            gorm: "primaryKey"
+        name:
+          type: string
+        description:
+          type: string
+    Meal:
+      title: Meal
+      description: A meal
+      type: object
+      required:
+      - id
+      - name
+      - price
+      - ingredients
+      - pictureUrl
+      - tags
+      - description
+      - kcal
+      properties:
+        id:
+          type: integer
+          format: int64
+          x-oapi-codegen-extra-tags: 
+            gorm: "primaryKey"
+        name:
+          type: string
+          x-oapi-codegen-extra-tags: 
+            valid: "customNameValidator"
+        price:
+          type: number
+        ingredients:
+          type: array
+          x-oapi-codegen-extra-tags: 
+            gorm: "many2many:meal_ingredients"
+          items:
+            $ref: "#/components/schemas/Ingredient"
+        pictureUrl:
+          type: string
+        tags:
+          type: array
+          x-oapi-codegen-extra-tags: 
+            gorm: "many2many:meal_tags"
+          items:
+            $ref: "#/components/schemas/Tag"
+        description:
+          type: string
+        kcal:
+          type: number
+    Version:
+      title: Version
+      description: Version and build info
+      type: object
+      required:
+      - version
+      - buildTime
+      - appName
+      - goMod
+      properties:
+        version:
+          type: string
+        buildTime:
+          type: string
+        appName:
+          type: string
+        goMod:
+          type: string
+    ApiError:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string

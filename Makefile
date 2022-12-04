@@ -13,9 +13,7 @@ DOCKER_MDLINT_VERSION ?= 0.3.2
 DOCKER_MDLINT_IMAGE ?= markdownlint-cli2:${DOCKER_MDLINT_VERSION}
 DOCKER_MDLINT_PATH ?= davidanson
 
-DOCKER_OPENAPI_VERSION ?= v0.29.0
-DOCKER_OPENAPI_IMAGE ?= swagger:${DOCKER_OPENAPI_VERSION}
-DOCKER_OPENAPI_PATH ?= quay.io/goswagger
+OAPI_CODEGEN_VERSION ?= v1.12.3
 
 API_PACKAGE_NAME ?= foodstore
 APP_NAME ?= meals-demo
@@ -64,29 +62,10 @@ DOCKER_RUN_FLAGS ?= --user $$(id -u):$$(id -g) \
 DOCKERFILE_APP_DIR ?= build
 
 openapi-server:
-	docker run ${DOCKER_RUN_FLAGS} \
-		-w ${SRC_DIR} \
-		${DOCKER_OPENAPI_PATH}/${DOCKER_OPENAPI_IMAGE} \
-		generate server \
-		-f ${SRC_DIR}/api/foodstore.yaml \
-		-t internal \
-		--principal models.User \
-		--exclude-main
-
-#		--server-package internal/restapi \
-#		--model-package pkg/models
+	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@${OAPI_CODEGEN_VERSION}
+	oapi-codegen -config api/foodstore-server.cfg.yaml api/foodstore.yaml
+	oapi-codegen -config api/foodstore-types.cfg.yaml api/foodstore.yaml
 .PHONY: openapi-server
-
-openapi-view:
-	docker run ${DOCKER_RUN_FLAGS} \
-		--network host \
-		-w ${SRC_DIR} \
-		${DOCKER_OPENAPI_PATH}/${DOCKER_OPENAPI_IMAGE} \
-		serve \
-		--port 8088 \
-		--no-open \
-		${SRC_DIR}/api/foodstore.yaml
-.PHONY: openapi-view
 
 build:
 	cp go.mod internal/buildinfo/_go.mod

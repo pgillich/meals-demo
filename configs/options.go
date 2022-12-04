@@ -20,4 +20,4 @@ type Options struct {
 	JwtExpireSec string `long:"jwt-expire-sec" env:"SERVICE_JWT_EXPIRE_SEC"`
 }
 
-const TestingBasePath = "/v1"
+const TestingBasePath = ""

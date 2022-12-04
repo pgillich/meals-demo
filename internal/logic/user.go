@@ -1,98 +1,56 @@
 package logic
 
 import (
-	"log"
-	"strconv"
+	"context"
 	"strings"
 	"time"
 
 	"emperror.dev/errors"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/runtime/security"
 
-	"github.com/pgillich/meals-demo/configs"
-	"github.com/pgillich/meals-demo/internal/dao"
-	"github.com/pgillich/meals-demo/internal/models"
-	"github.com/pgillich/meals-demo/internal/restapi/operations"
-	"github.com/pgillich/meals-demo/internal/restapi/operations/user"
+	"github.com/pgillich/meals-demo/internal/api"
 )
 
-func SetUserAPI(config configs.Options, api *operations.OpenAPIFoodstoreAPI) {
-	var jwtExpireSec int
-	var err error
-	if config.JwtExpireSec != "" {
-		if jwtExpireSec, err = strconv.Atoi(config.JwtExpireSec); err != nil {
-			log.Fatal(err)
-		}
+func (fs *FoodStore) Login(ctx context.Context, request api.LoginRequestObject) (api.LoginResponseObject, error) {
+	if request.Body == nil || request.Body.Email == "" || request.Body.Password == "" {
+		return api.Login400JSONResponse{Message: "Missing cred info"}, nil
 	}
-	if jwtExpireSec <= 0 {
-		jwtExpireSec = 60 * 60
-	}
-	userAPI := &UserAPI{
-		jwtIssuer:    "foodstore",
-		jwtKey:       config.JwtKey,
-		jwtExpireSec: time.Duration(jwtExpireSec) * time.Second,
-		method:       jwt.SigningMethodHS256,
-	}
-
-	userAPI.dbHandler, err = dao.NewHandler(config)
+	authUser, err := fs.dbHandler.AuthenticateUser(request.Body.Email, request.Body.Password)
 	if err != nil {
-		log.Fatal(err)
+		return api.Login404AsteriskResponse{}, nil //nolint:nilerr // in another field
 	}
 
-	api.JWTAuth = userAPI.ValidateHeader
-	api.APIKeyAuthenticator = security.APIKeyAuth
-	api.UserLoginHandler = user.LoginHandlerFunc(userAPI.Login)
+	token, err := fs.GenerateJWT(authUser.Email)
+	if err != nil {
+		//nolint:nilerr // in another field
+		return api.Login500AsteriskResponse{Body: strings.NewReader("Error defining token")}, nil
+	}
+
+	return api.Login200JSONResponse{Success: true, Token: token}, nil
 }
 
-type UserAPI struct {
-	dbHandler    *dao.Handler
-	jwtIssuer    string
-	jwtKey       string
-	jwtExpireSec time.Duration
-	method       jwt.SigningMethod
-}
-
-func (userAPI *UserAPI) Login(params user.LoginParams) middleware.Responder {
-	if params.Login.Email == nil || params.Login.Password == nil {
-		return user.NewLoginInternalServerError().WithPayload("Missing cred info")
-	}
-	authUser, err := userAPI.dbHandler.AuthenticateUser(*params.Login.Email, *params.Login.Password)
-	if err != nil {
-		return user.NewLoginNotFound()
-	}
-
-	token, err := userAPI.GenerateJWT(authUser.Email)
-	if err != nil {
-		return user.NewLoginInternalServerError().WithPayload("Error defining token")
-	}
-
-	return user.NewLoginOK().WithPayload(&models.LoginSuccess{Success: true, Token: token})
-}
-
-func (userAPI *UserAPI) ValidateHeader(bearerHeader string) (*models.User, error) {
+func (fs *FoodStore) ValidateHeader(bearerHeader string) (*api.User, error) {
 	bearerToken := strings.Split(bearerHeader, " ")[1]
 	claims := &jwt.StandardClaims{}
 	token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(userAPI.jwtKey), nil
+		return []byte(fs.jwtKey), nil
 	})
 	if err != nil {
 		return nil, errors.WrapWithDetails(err, "Unable to parse JWT")
 	}
 	if token.Valid {
-		return userAPI.dbHandler.GetUserByEmail(claims.Subject)
+		return fs.dbHandler.GetUserByEmail(claims.Subject)
 	}
 
 	return nil, errors.New("invalid token")
 }
 
-func (userAPI *UserAPI) GenerateJWT(email string) (string, error) {
-	tokenString, err := jwt.NewWithClaims(userAPI.method, jwt.StandardClaims{
+func (fs *FoodStore) GenerateJWT(email string) (string, error) {
+	tokenString, err := jwt.NewWithClaims(fs.method, jwt.StandardClaims{
 		Subject:   email,
-		ExpiresAt: time.Now().Add(userAPI.jwtExpireSec).Unix(),
+		ExpiresAt: time.Now().Add(fs.jwtExpireSec).Unix(),
 		Issuer:    "jwtIssuer",
-	}).SignedString([]byte(userAPI.jwtKey))
+	}).SignedString([]byte(fs.jwtKey))
 	if err != nil {
 		return "", errors.WrapWithDetails(err, "Error generating Token")
 	}

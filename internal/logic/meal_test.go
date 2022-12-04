@@ -3,18 +3,19 @@ package logic
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
 	"github.com/pgillich/meals-demo/configs"
 	"github.com/pgillich/meals-demo/internal"
+	"github.com/pgillich/meals-demo/internal/api"
 	"github.com/pgillich/meals-demo/internal/dao"
-	"github.com/pgillich/meals-demo/internal/models"
-	"github.com/pgillich/meals-demo/internal/restapi"
 )
 
 type MealTestSuite struct {
@@ -26,14 +27,14 @@ func TestMealTestSuite(t *testing.T) {
 	suite.Run(t, new(InfoTestSuite))
 }
 
-func (s *InfoTestSuite) buildServerMeal(options *configs.Options) *restapi.Server {
-	return internal.BuildServer(options, SetUserAPI, SetMealAPI)
+func (s *InfoTestSuite) buildServerMeal(options *configs.Options) *http.Server {
+	return internal.BuildServer(options, NewFoodStore)
 }
 
-func (s *InfoTestSuite) getJwtToken(server *restapi.Server) string {
-	login := &models.LoginInfo{
-		Email:    stringRef("yoda@star.wars"),
-		Password: stringRef("master"),
+func (s *InfoTestSuite) getJwtToken(server *http.Server) string {
+	login := &api.LoginInfo{
+		Email:    "yoda@star.wars",
+		Password: "master",
 	}
 	body, err := json.Marshal(login)
 	s.NoError(err, "Token")
@@ -41,11 +42,12 @@ func (s *InfoTestSuite) getJwtToken(server *restapi.Server) string {
 	r := httptest.NewRequest("POST", configs.TestingBasePath+"/login", bytes.NewReader(body))
 	r.Header.Add("Content-Type", "application/json")
 
-	server.GetHandler().ServeHTTP(w, r)
+	server.Handler.ServeHTTP(w, r)
+	defer server.Close()
 
 	body = w.Body.Bytes()
 	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
-	tokenCreated := &models.LoginSuccess{}
+	tokenCreated := &api.LoginSuccess{}
 	err = json.Unmarshal(body, tokenCreated)
 	s.NoError(err, "Body")
 
@@ -55,7 +57,7 @@ func (s *InfoTestSuite) getJwtToken(server *restapi.Server) string {
 func (s *InfoTestSuite) TestMealGetTags() {
 	options := configs.Options{
 		DbDialect: "sqlite3",
-		DbDsn:     ":memory:",
+		DbDsn:     fmt.Sprintf("file:memdb%s%d?mode=memory&cache=shared&_pragma=foreign_keys(1)", regexp.MustCompile("[^a-zA-Z0-9]+").ReplaceAllString(s.T().Name(), "_"), os.Getpid()),
 		DbSample:  true,
 		DbDebug:   false,
 		JwtKey:    "5678",
@@ -64,12 +66,13 @@ func (s *InfoTestSuite) TestMealGetTags() {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", configs.TestingBasePath+"/tags", nil)
 
-	server.GetHandler().ServeHTTP(w, r)
+	server.Handler.ServeHTTP(w, r)
+	defer server.Close()
 
 	defaultTags := guessTagIDs(dao.GetDefaultFillTags())
 	body := w.Body.Bytes()
 	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
-	tags := []*models.Tag{}
+	tags := []api.Tag{}
 	err := json.Unmarshal(body, &tags)
 	s.NoError(err, "Body")
 	s.ElementsMatch(defaultTags, tags)
@@ -78,7 +81,7 @@ func (s *InfoTestSuite) TestMealGetTags() {
 func (s *InfoTestSuite) TestMealGetIngredients() {
 	options := configs.Options{
 		DbDialect: "sqlite3",
-		DbDsn:     ":memory:",
+		DbDsn:     fmt.Sprintf("file:memdb%s%d?mode=memory&cache=shared&_pragma=foreign_keys(1)", regexp.MustCompile("[^a-zA-Z0-9]+").ReplaceAllString(s.T().Name(), "_"), os.Getpid()),
 		DbSample:  true,
 		DbDebug:   false,
 		JwtKey:    "5678",
@@ -87,12 +90,13 @@ func (s *InfoTestSuite) TestMealGetIngredients() {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", configs.TestingBasePath+"/ingredients", nil)
 
-	server.GetHandler().ServeHTTP(w, r)
+	server.Handler.ServeHTTP(w, r)
+	defer server.Close()
 
 	defaultIngredients := guessIngredientIDs(dao.GetDefaultFillIngredients())
 	body := w.Body.Bytes()
 	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
-	ingredients := []*models.Ingredient{}
+	ingredients := []api.Ingredient{}
 	err := json.Unmarshal(body, &ingredients)
 	s.NoError(err, "Body")
 	s.ElementsMatch(defaultIngredients, ingredients)
@@ -101,7 +105,7 @@ func (s *InfoTestSuite) TestMealGetIngredients() {
 func (s *InfoTestSuite) TestMealFindMeals() {
 	options := configs.Options{
 		DbDialect: "sqlite3",
-		DbDsn:     ":memory:",
+		DbDsn:     fmt.Sprintf("file:memdb%s%d?mode=memory&cache=shared&_pragma=foreign_keys(1)", regexp.MustCompile("[^a-zA-Z0-9]+").ReplaceAllString(s.T().Name(), "_"), os.Getpid()),
 		DbSample:  true,
 		DbDebug:   false,
 		JwtKey:    "5678",
@@ -110,7 +114,8 @@ func (s *InfoTestSuite) TestMealFindMeals() {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", configs.TestingBasePath+"/meal/findByTag", nil)
 
-	server.GetHandler().ServeHTTP(w, r)
+	server.Handler.ServeHTTP(w, r)
+	defer server.Close()
 
 	defaultMeals := guessMealIDs(dao.GetDefaultFillMeals(
 		guessTagIDs(dao.GetDefaultFillTags()),
@@ -119,7 +124,7 @@ func (s *InfoTestSuite) TestMealFindMeals() {
 	body := w.Body.Bytes()
 	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
 	// fmt.Println(string(body))
-	meals := []*models.Meal{}
+	meals := []api.Meal{}
 	err := json.Unmarshal(body, &meals)
 	s.NoError(err, "Body")
 	s.ElementsMatch(defaultMeals, meals)
@@ -128,7 +133,7 @@ func (s *InfoTestSuite) TestMealFindMeals() {
 func (s *InfoTestSuite) TestMealFindMealsByTags() {
 	options := configs.Options{
 		DbDialect: "sqlite3",
-		DbDsn:     ":memory:",
+		DbDsn:     fmt.Sprintf("file:memdb%s%d?mode=memory&cache=shared&_pragma=foreign_keys(1)", regexp.MustCompile("[^a-zA-Z0-9]+").ReplaceAllString(s.T().Name(), "_"), os.Getpid()),
 		DbSample:  true,
 		DbDebug:   false,
 		JwtKey:    "5678",
@@ -137,12 +142,13 @@ func (s *InfoTestSuite) TestMealFindMealsByTags() {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", configs.TestingBasePath+"/meal/findByTag?tag=1", nil)
 
-	server.GetHandler().ServeHTTP(w, r)
+	server.Handler.ServeHTTP(w, r)
+	defer server.Close()
 
 	body := w.Body.Bytes()
 	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
 	//fmt.Println(string(body))
-	meals := []*models.Meal{}
+	meals := []api.Meal{}
 	err := json.Unmarshal(body, &meals)
 	s.NoError(err, "Body")
 }
@@ -150,7 +156,7 @@ func (s *InfoTestSuite) TestMealFindMealsByTags() {
 func (s *InfoTestSuite) TestMealDeleteMeal() {
 	options := configs.Options{
 		DbDialect: "sqlite3",
-		DbDsn:     ":memory:",
+		DbDsn:     fmt.Sprintf("file:memdb%s%d?mode=memory&cache=shared&_pragma=foreign_keys(1)", regexp.MustCompile("[^a-zA-Z0-9]+").ReplaceAllString(s.T().Name(), "_"), os.Getpid()),
 		DbSample:  true,
 		DbDebug:   false,
 		JwtKey:    "5678",
@@ -161,7 +167,8 @@ func (s *InfoTestSuite) TestMealDeleteMeal() {
 	r := httptest.NewRequest("DELETE", configs.TestingBasePath+"/meal/1", nil)
 	r.Header.Add("Authorization", "Bearer "+token)
 
-	server.GetHandler().ServeHTTP(w, r)
+	server.Handler.ServeHTTP(w, r)
+	defer server.Close()
 
 	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+w.Body.String())
 	//body := w.Body.Bytes()
@@ -171,7 +178,7 @@ func (s *InfoTestSuite) TestMealDeleteMeal() {
 func (s *InfoTestSuite) TestMealUpdateMeal() {
 	options := configs.Options{
 		DbDialect: "sqlite3",
-		DbDsn:     ":memory:",
+		DbDsn:     fmt.Sprintf("file:memdb%s%d?mode=memory&cache=shared&_pragma=foreign_keys(1)", regexp.MustCompile("[^a-zA-Z0-9]+").ReplaceAllString(s.T().Name(), "_"), os.Getpid()),
 		DbSample:  true,
 		DbDebug:   false,
 		JwtKey:    "5678",
@@ -181,12 +188,13 @@ func (s *InfoTestSuite) TestMealUpdateMeal() {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", configs.TestingBasePath+"/meal/1", nil)
 
-	server.GetHandler().ServeHTTP(w, r)
+	server.Handler.ServeHTTP(w, r)
+	defer server.Close()
 
 	body := w.Body.Bytes()
 	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
 	//fmt.Println(string(body))
-	meal := &models.Meal{}
+	meal := &api.Meal{}
 	err := json.Unmarshal(body, meal)
 	s.NoError(err, "Body")
 
@@ -199,12 +207,13 @@ func (s *InfoTestSuite) TestMealUpdateMeal() {
 	r.Header.Add("Content-Type", "application/json")
 	r.Header.Add("Authorization", "Bearer "+token)
 
-	server.GetHandler().ServeHTTP(w, r)
+	server.Handler.ServeHTTP(w, r)
+	defer server.Close()
 
 	body = w.Body.Bytes()
 	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
 	//fmt.Println(string(body))
-	mealUpdated := &models.Meal{}
+	mealUpdated := &api.Meal{}
 	err = json.Unmarshal(body, mealUpdated)
 	s.NoError(err, "Body")
 	s.Equal("TEST", meal.Description, "Update")
@@ -212,12 +221,13 @@ func (s *InfoTestSuite) TestMealUpdateMeal() {
 	w = httptest.NewRecorder()
 	r = httptest.NewRequest("GET", configs.TestingBasePath+"/meal/1", nil)
 
-	server.GetHandler().ServeHTTP(w, r)
+	server.Handler.ServeHTTP(w, r)
+	defer server.Close()
 
 	body = w.Body.Bytes()
 	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
 	//fmt.Println(string(body))
-	mealLatest := &models.Meal{}
+	mealLatest := &api.Meal{}
 	err = json.Unmarshal(body, mealLatest)
 	s.NoError(err, "Body")
 	s.Equal("TEST", mealLatest.Description, "Update Description")
@@ -228,27 +238,27 @@ func (s *InfoTestSuite) TestMealUpdateMeal() {
 func (s *InfoTestSuite) TestMealCreateMeal() {
 	options := configs.Options{
 		DbDialect: "sqlite3",
-		DbDsn:     ":memory:",
+		DbDsn:     fmt.Sprintf("file:memdb%s%d?mode=memory&cache=shared&_pragma=foreign_keys(1)", regexp.MustCompile("[^a-zA-Z0-9]+").ReplaceAllString(s.T().Name(), "_"), os.Getpid()),
 		DbSample:  true,
-		DbDebug:   true,
+		DbDebug:   false,
 		JwtKey:    "5678",
 	}
 	server := s.buildServerMeal(&options)
 	token := s.getJwtToken(server)
 	tags := guessTagIDs(dao.GetDefaultFillTags())
 	ingredients := guessIngredientIDs(dao.GetDefaultFillIngredients())
-	meal := &models.Meal{
-		Name:        stringRef("Vegan"),
+	meal := &api.Meal{
+		Name:        "Vegan",
 		Description: "Vegan pizza",
-		PictureURL:  "http://a.com",
+		PictureUrl:  "http://a.com",
 		Price:       4.10,
 		Kcal:        234,
-		Ingredients: []*models.Ingredient{
+		Ingredients: []api.Ingredient{
 			ingredients[0],
 			ingredients[5],
 			ingredients[6],
 		},
-		Tags: []*models.Tag{
+		Tags: []api.Tag{
 			tags[2],
 		},
 	}
@@ -259,40 +269,37 @@ func (s *InfoTestSuite) TestMealCreateMeal() {
 	r.Header.Add("Content-Type", "application/json")
 	r.Header.Add("Authorization", "Bearer "+token)
 
-	server.GetHandler().ServeHTTP(w, r)
+	server.Handler.ServeHTTP(w, r)
+	defer server.Close()
 
 	body = w.Body.Bytes()
 	s.Equal(http.StatusOK, w.Result().StatusCode, "Status, "+string(body))
 	//fmt.Println(string(body))
-	mealCreated := &models.Meal{}
+	mealCreated := &api.Meal{}
 	err = json.Unmarshal(body, mealCreated)
 	s.NoError(err, "Body")
 }
 
-func guessTagIDs(tags []*models.Tag) []*models.Tag {
-	for t, tag := range tags {
-		tag.ID = int64(t + 1)
+func guessTagIDs(tags []api.Tag) []api.Tag {
+	for t := range tags {
+		tags[t].Id = int64(t + 1)
 	}
 
 	return tags
 }
 
-func guessIngredientIDs(ingredients []*models.Ingredient) []*models.Ingredient {
-	for i, tag := range ingredients {
-		tag.ID = int64(i + 1)
+func guessIngredientIDs(ingredients []api.Ingredient) []api.Ingredient {
+	for i := range ingredients {
+		ingredients[i].Id = int64(i + 1)
 	}
 
 	return ingredients
 }
 
-func guessMealIDs(meals []*models.Meal) []*models.Meal {
-	for m, mea := range meals {
-		mea.ID = int64(m + 1)
+func guessMealIDs(meals []api.Meal) []api.Meal {
+	for m := range meals {
+		meals[m].Id = int64(m + 1)
 	}
 
 	return meals
-}
-
-func stringRef(s string) *string {
-	return &s
 }

@@ -3,7 +3,7 @@ package dao
 import (
 	"emperror.dev/errors"
 
-	"github.com/pgillich/meals-demo/internal/models"
+	models "github.com/pgillich/meals-demo/internal/api"
 )
 
 func (dbHandler *Handler) CreateMeal(meal models.Meal) (models.Meal, error) {
@@ -16,8 +16,8 @@ func (dbHandler *Handler) UpdateMeal(m models.Meal) (models.Meal, error) {
 	meal := &m
 	tags := meal.Tags
 	ingredients := meal.Ingredients
-	meal.Tags = []*models.Tag{}
-	meal.Ingredients = []*models.Ingredient{}
+	meal.Tags = []models.Tag{}
+	meal.Ingredients = []models.Ingredient{}
 
 	dbA := dbHandler.DB.Model(meal).Association("Tags").Replace(tags)
 	if dbA.Error != nil {
@@ -39,7 +39,7 @@ func (dbHandler *Handler) UpdateMeal(m models.Meal) (models.Meal, error) {
 
 func (dbHandler *Handler) DeleteMeal(id int64) error {
 	meal := models.Meal{
-		ID: id,
+		Id: id,
 	}
 	db := dbHandler.DB.Delete(&meal)
 
@@ -48,21 +48,21 @@ func (dbHandler *Handler) DeleteMeal(id int64) error {
 
 func (dbHandler *Handler) GetMeal(id int64) (*models.Meal, error) {
 	meal := models.Meal{
-		ID: id,
+		Id: id,
 	}
 	db := dbHandler.DB.Preload("Tags").Preload("Ingredients").Find(&meal)
 
 	return &meal, errors.WrapWithDetails(db.Error, "cannot get meal")
 }
 
-func (dbHandler *Handler) FindMealsByTag(tagID *int64) ([]*models.Meal, error) {
-	meals := []*models.Meal{}
+func (dbHandler *Handler) FindMealsByTag(tagID *int64) ([]models.Meal, error) {
+	meals := []models.Meal{}
 	db := dbHandler.DB.Preload("Tags").Preload("Ingredients").Find(&meals)
 	if tagID != nil {
-		mealsRemained := []*models.Meal{}
+		mealsRemained := []models.Meal{}
 		for _, mea := range meals {
 			for _, tag := range mea.Tags {
-				if tag.ID == *tagID {
+				if tag.Id == *tagID {
 					mealsRemained = append(mealsRemained, mea)
 
 					break
@@ -75,7 +75,7 @@ func (dbHandler *Handler) FindMealsByTag(tagID *int64) ([]*models.Meal, error) {
 	return meals, errors.WrapWithDetails(db.Error, "cannot get meals")
 }
 
-func (dbHandler *Handler) fillMeals(meals []*models.Meal) error {
+func (dbHandler *Handler) fillMeals(meals []models.Meal) error {
 	if storedMeals, err := dbHandler.FindMealsByTag(nil); err != nil {
 		return err
 	} else if len(storedMeals) > 0 {
@@ -83,7 +83,7 @@ func (dbHandler *Handler) fillMeals(meals []*models.Meal) error {
 	}
 
 	for _, meal := range meals {
-		if _, err := dbHandler.CreateMeal(*meal); err != nil {
+		if _, err := dbHandler.CreateMeal(meal); err != nil {
 			return err
 		}
 	}
@@ -91,40 +91,36 @@ func (dbHandler *Handler) fillMeals(meals []*models.Meal) error {
 	return nil
 }
 
-func GetDefaultFillMeals(tags []*models.Tag, ingredients []*models.Ingredient) []*models.Meal {
-	return []*models.Meal{
+func GetDefaultFillMeals(tags []models.Tag, ingredients []models.Ingredient) []models.Meal {
+	return []models.Meal{
 		{
-			Name:        stringRef("Spicy"),
+			Name:        "Spicy",
 			Description: "Spicy pizza",
-			PictureURL:  "http://a.com",
+			PictureUrl:  "http://a.com",
 			Price:       3.25,
 			Kcal:        123,
-			Ingredients: []*models.Ingredient{
+			Ingredients: []models.Ingredient{
 				ingredients[0],
 				ingredients[2],
 				ingredients[3],
 			},
-			Tags: []*models.Tag{
+			Tags: []models.Tag{
 				tags[0],
 			},
 		},
 		{
-			Name:        stringRef("Vegan"),
+			Name:        "Vegan",
 			Description: "Vegan pizza",
-			PictureURL:  "http://a.com",
+			PictureUrl:  "http://a.com",
 			Price:       4.10,
 			Kcal:        234,
-			Ingredients: []*models.Ingredient{
+			Ingredients: []models.Ingredient{
 				ingredients[1],
 				ingredients[4],
 			},
-			Tags: []*models.Tag{
+			Tags: []models.Tag{
 				tags[1],
 			},
 		},
 	}
-}
-
-func stringRef(s string) *string {
-	return &s
 }

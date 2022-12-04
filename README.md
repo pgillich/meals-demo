@@ -2,6 +2,8 @@
 
 Demo for a meals service. It's written in Go.
 
+This branch uses OpenAPI V3, the model file was converted from V2 by <https://mermade.org.uk/openapi-converter>.
+
 <!-- markdownlint-disable MD013 -->
 
 ## Deployment
@@ -9,6 +11,12 @@ Demo for a meals service. It's written in Go.
 The deployment is worked out for a local Kubernetes described at <https://github.com/pgillich/kind-on-dev> with default values. Add `foodstore.kind-01.company.com` to the `/etc/hosts`, similar to `monitoring.kind-01.company.com`.
 
 Another deployment example is described in [DIGITALOCEAN.md](DIGITALOCEAN.md).
+
+The `psql` client can be installed by below command:
+
+```sh
+apt install postgresql-client-12
+```
 
 ### Postgres
 
@@ -30,7 +38,7 @@ The connection can be checked by `psql`, and the database should be created, for
 
 ```sh
 psql -h 172.18.1.128 -U admin --password -p 5432 postgresdb
-Password:
+Password: test123
 psql (12.9 (Ubuntu 12.9-0ubuntu0.20.04.1), server 10.1)
 Type "help" for help.
 
@@ -216,8 +224,8 @@ Below chapters describe possible improvemts.
 ### Source code
 
 * Log libraries (for centralized log collector/parser)
-  * https://github.com/pgillich/errfmt/tree/emperror
-  * https://github.com/logur/logur
+  * <https://github.com/pgillich/errfmt/tree/emperror>
+  * <https://github.com/logur/logur>
 * Error handling library (emperror ?)
 * Better HTML Status codes (Create: 201)
 * More HTML Status error codes

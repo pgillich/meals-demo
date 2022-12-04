@@ -3,7 +3,7 @@ package dao
 import (
 	"emperror.dev/errors"
 
-	"github.com/pgillich/meals-demo/internal/models"
+	models "github.com/pgillich/meals-demo/internal/api"
 )
 
 func (dbHandler *Handler) CreateTag(tag models.Tag) (models.Tag, error) {
@@ -12,14 +12,14 @@ func (dbHandler *Handler) CreateTag(tag models.Tag) (models.Tag, error) {
 	return tag, errors.WrapWithDetails(db.Error, "cannot create tag")
 }
 
-func (dbHandler *Handler) GetTags() ([]*models.Tag, error) {
-	tags := []*models.Tag{}
+func (dbHandler *Handler) GetTags() ([]models.Tag, error) {
+	tags := []models.Tag{}
 	db := dbHandler.DB.Find(&tags)
 
 	return tags, errors.WrapWithDetails(db.Error, "cannot get tags")
 }
 
-func (dbHandler *Handler) fillTags(tags []*models.Tag) error {
+func (dbHandler *Handler) fillTags(tags []models.Tag) error {
 	if storedTags, err := dbHandler.GetTags(); err != nil {
 		return err
 	} else if len(storedTags) > 0 {
@@ -27,7 +27,7 @@ func (dbHandler *Handler) fillTags(tags []*models.Tag) error {
 	}
 
 	for _, tag := range tags {
-		if _, err := dbHandler.CreateTag(*tag); err != nil {
+		if _, err := dbHandler.CreateTag(tag); err != nil {
 			return err
 		}
 	}
@@ -35,8 +35,8 @@ func (dbHandler *Handler) fillTags(tags []*models.Tag) error {
 	return nil
 }
 
-func GetDefaultFillTags() []*models.Tag {
-	return []*models.Tag{
+func GetDefaultFillTags() []models.Tag {
+	return []models.Tag{
 		{
 			Name: "spicy",
 		},

@@ -3,7 +3,7 @@ package dao
 import (
 	"errors"
 
-	"github.com/pgillich/meals-demo/internal/models"
+	models "github.com/pgillich/meals-demo/internal/api"
 )
 
 var (

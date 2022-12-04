@@ -8,7 +8,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite"   // import Sqlite driver
 
 	"github.com/pgillich/meals-demo/configs"
-	"github.com/pgillich/meals-demo/internal/models"
+	models "github.com/pgillich/meals-demo/internal/api"
 )
 
 // Handler is a thin layer over Gorm
